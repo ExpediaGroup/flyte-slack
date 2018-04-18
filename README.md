@@ -1,4 +1,4 @@
-# flyte-slack
+# flyte-slack ![Build Status](https://travis-ci.org/HotelsDotCom/flyte-slack.svg?branch=master)
 
 A Slack pack for flyte.
 
