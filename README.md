@@ -1,4 +1,8 @@
-# flyte-slack ![Build Status](https://travis-ci.org/HotelsDotCom/flyte-slack.svg?branch=master)
+# flyte-slack
+
+![Build Status](https://travis-ci.org/HotelsDotCom/flyte-slack.svg?branch=master)
+[![Docker Stars](https://img.shields.io/docker/stars/hotelsdotcom/flyte-slack.svg)](https://hub.docker.com/r/hotelsdotcom/flyte-slack)
+[![Docker Pulls](https://img.shields.io/docker/pulls/hotelsdotcom/flyte-slack.svg)](https://hub.docker.com/r/hotelsdotcom/flyte-slack)
 
 A Slack pack for flyte.
 
