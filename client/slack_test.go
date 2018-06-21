@@ -381,9 +381,50 @@ func TestIncomingMessages(t *testing.T) {
 		assert.Equal(t, "k@example.com", payload.User.Email)
 		assert.Equal(t, "Karl", payload.User.FirstName)
 		assert.Equal(t, "Foox", payload.User.LastName)
+
 	default:
 		assert.Fail(t, "expected message event")
 	}
+}
+
+func TestIncomingMessagesLogging(t *testing.T) {
+
+	// given
+	Before(t)
+	defer After()
+	loggertest.ClearLogMessages()
+	c1 := &s.Channel{}
+	c1.Name = "name-abc"
+	SlackMockClient.AddMockGetChannelInfoCall("id-abc", c1, nil)
+	SlackMockClient.AddMockJoinChannelCall("name-abc", nil)
+	u := &s.User{
+		ID:   "user-id-123",
+		Name: "kfoox",
+		Profile: s.UserProfile{
+			Title:     "boss",
+			Email:     "k@example.com",
+			FirstName: "Karl",
+			LastName:  "Foox",
+		},
+	}
+	SlackMockClient.AddMockGetUserInfoCall("user-id-123", u, nil)
+
+	// when
+	SlackImpl.JoinChannel("id-abc")
+	sendSlackMessage(SlackImpl, "hello there ...", "id-abc", "user-id-123")
+	time.Sleep(50 * time.Millisecond)
+
+	// then
+	msgs := loggertest.GetLogMessages()
+	require.Equal(t, 3, len(msgs))
+	assert.Equal(t, "message=\"Hello! I've joined this room ...\" sent to channel=id-abc", msgs[0].Message)
+	assert.Equal(t, loggertest.LogLevelInfo, msgs[0].Level)
+
+	assert.Equal(t, "joined channel=id-abc", msgs[1].Message)
+	assert.Equal(t, loggertest.LogLevelInfo, msgs[1].Level)
+
+	assert.Equal(t, "received message=hello there ... in channel=id-abc", msgs[2].Message)
+	assert.Equal(t, loggertest.LogLevelDebug, msgs[2].Level)
 }
 
 func TestIncomingMessagesOnChannelThatIsNotJoined(t *testing.T) {
