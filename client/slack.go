@@ -182,7 +182,7 @@ func (sl *slack) handleMessageEvents() {
 		switch v := event.Data.(type) {
 		case *s.MessageEvent:
 			if _, ok := sl.joinedChannelIds.Load(v.Channel); ok {
-				logger.Infof("received message=%s in channel=%s", v.Text, v.Channel)
+				logger.Debugf("received message=%s in channel=%s", v.Text, v.Channel)
 				u, err := sl.client.GetUserInfo(v.User)
 				if err != nil {
 					logger.Errorf("cannot get info about user=%s: %v", v.User, err)
