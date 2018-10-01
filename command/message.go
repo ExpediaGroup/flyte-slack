@@ -30,8 +30,9 @@ var (
 )
 
 type SendMessageInput struct {
-	Message   string `json:"message"`
-	ChannelId string `json:"channelId"`
+	Message         string `json:"message"`
+	ThreadTimestamp string `json:"threadTimestamp"`
+	ChannelId       string `json:"channelId"`
 }
 
 type SendMessageOutput struct {
@@ -72,7 +73,7 @@ func sendMessageHandler(slack client.Slack) func(json.RawMessage) flyte.Event {
 			return newSendMessageFailedEvent(input.Message, input.ChannelId, strings.Join(errorMessages, ", "))
 		}
 
-		slack.SendMessage(input.Message, input.ChannelId)
+		slack.SendMessage(input.Message, input.ChannelId, input.ThreadTimestamp)
 		return newMessageSentEvent(input.Message, input.ChannelId)
 	}
 }

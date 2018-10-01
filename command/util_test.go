@@ -37,7 +37,7 @@ func NewMockSlack() *MockSlack {
 	return m
 }
 
-func (m *MockSlack) SendMessage(message, channelId string) {
+func (m *MockSlack) SendMessage(message, channelId, _ string) {
 	m.SendMessageCalls[channelId] = append(m.SendMessageCalls[channelId], message)
 }
 

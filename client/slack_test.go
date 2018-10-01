@@ -50,10 +50,11 @@ func TestSendMessage(t *testing.T) {
 	Before(t)
 	defer After()
 
-	SlackImpl.SendMessage("the message", "channel id")
+	SlackImpl.SendMessage("the message", "channel id", "now")
 
 	require.Equal(t, 1, len(SlackMockClient.OutgoingMessages))
 	assert.Equal(t, "the message", SlackMockClient.OutgoingMessages["channel id"][0].Text)
+
 }
 
 func TestSendRichMessage(t *testing.T) {
@@ -366,7 +367,7 @@ func TestIncomingMessages(t *testing.T) {
 
 	incomingMessages := SlackImpl.IncomingMessages()
 	SlackImpl.JoinChannel("id-abc")
-	sendSlackMessage(SlackImpl, "hello there ...", "id-abc", "user-id-123")
+	sendSlackMessage(SlackImpl, "hello there ...", "id-abc", "user-id-123", "now", "thread")
 	time.Sleep(50 * time.Millisecond)
 
 	select {
@@ -381,6 +382,8 @@ func TestIncomingMessages(t *testing.T) {
 		assert.Equal(t, "k@example.com", payload.User.Email)
 		assert.Equal(t, "Karl", payload.User.FirstName)
 		assert.Equal(t, "Foox", payload.User.LastName)
+		assert.Equal(t, "now", payload.Timestamp)
+		assert.Equal(t, "thread", payload.ThreadTimestamp)
 
 	default:
 		assert.Fail(t, "expected message event")
@@ -411,7 +414,7 @@ func TestIncomingMessagesLogging(t *testing.T) {
 
 	// when
 	SlackImpl.JoinChannel("id-abc")
-	sendSlackMessage(SlackImpl, "hello there ...", "id-abc", "user-id-123")
+	sendSlackMessage(SlackImpl, "hello there ...", "id-abc", "user-id-123", "", "")
 	time.Sleep(50 * time.Millisecond)
 
 	// then
@@ -441,7 +444,7 @@ func TestIncomingMessagesOnChannelThatIsNotJoined(t *testing.T) {
 	incomingMessages := SlackImpl.IncomingMessages()
 
 	// send message to xyz channel
-	sendSlackMessage(SlackImpl, "hello there ...", "xyz", "user-id")
+	sendSlackMessage(SlackImpl, "hello there ...", "xyz", "user-id", "", "")
 	time.Sleep(50 * time.Millisecond)
 
 	select {
@@ -468,7 +471,7 @@ func TestIncomingMessagesOnLeftChannel(t *testing.T) {
 	SlackImpl.JoinChannel("id-abc")
 	incomingMessages := SlackImpl.IncomingMessages()
 
-	sendSlackMessage(SlackImpl, "hello there ...", "id-abc", "user-id")
+	sendSlackMessage(SlackImpl, "hello there ...", "id-abc", "user-id", "", "")
 	time.Sleep(50 * time.Millisecond)
 
 	// consume message
@@ -481,7 +484,7 @@ func TestIncomingMessagesOnLeftChannel(t *testing.T) {
 
 	// leave abc channel and send another message to that channel
 	SlackImpl.LeaveChannel("id-abc")
-	sendSlackMessage(SlackImpl, "hello there ...", "id-abc", "user-id")
+	sendSlackMessage(SlackImpl, "hello there ...", "id-abc", "user-id", "", "")
 	time.Sleep(50 * time.Millisecond)
 
 	// no message should be received (we left the channel)
@@ -505,7 +508,7 @@ func TestIncomingMessagesOnJoinedChannel(t *testing.T) {
 	SlackMockClient.AddMockGetUserInfoCall("user-id", u, nil)
 
 	// send message (no channel is joined yet)
-	sendSlackMessage(SlackImpl, "hello there ...", "id-123", "user-id")
+	sendSlackMessage(SlackImpl, "hello there ...", "id-123", "user-id", "", "")
 
 	// no message should be received (no channel is joined)
 	incomingMessages := SlackImpl.IncomingMessages()
@@ -520,7 +523,7 @@ func TestIncomingMessagesOnJoinedChannel(t *testing.T) {
 
 	// join 123 channel and send message to that channel
 	SlackImpl.JoinChannel("id-123")
-	sendSlackMessage(SlackImpl, "one two three ...", "id-123", "user-id")
+	sendSlackMessage(SlackImpl, "one two three ...", "id-123", "user-id", "", "")
 	time.Sleep(50 * time.Millisecond)
 
 	// consume message
@@ -535,12 +538,14 @@ func TestIncomingMessagesOnJoinedChannel(t *testing.T) {
 // --- helpers ---
 
 // this simulates messages coming from slack
-func sendSlackMessage(slackImpl Slack, text, channel, userId string) {
+func sendSlackMessage(slackImpl Slack, text, channel, userId, timestamp, threadTimestamp string) {
 
 	data := &s.MessageEvent{}
 	data.Text = text
 	data.Channel = channel
 	data.User = userId
+	data.Timestamp = timestamp
+	data.ThreadTimestamp = threadTimestamp
 	messageEvent := s.RTMEvent{Type: "message", Data: data}
 
 	slackImpl.(*slack).incomingEvents <- messageEvent

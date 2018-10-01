@@ -39,7 +39,7 @@ func TestPackDefinitionIsPopulated(t *testing.T) {
 
 type DummySlack struct{}
 
-func (DummySlack) SendMessage(message, channelId string) {}
+func (DummySlack) SendMessage(message, channelId, threadTimestamp string) {}
 
 func (DummySlack) SendRichMessage(client.RichMessage) error { return nil }
 

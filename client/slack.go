@@ -17,12 +17,12 @@ limitations under the License.
 package client
 
 import (
-	s "github.com/nlopes/slack"
-	"github.com/HotelsDotCom/go-logger"
-	"sync"
 	"errors"
 	"fmt"
 	"github.com/HotelsDotCom/flyte-client/flyte"
+	"github.com/HotelsDotCom/go-logger"
+	s "github.com/nlopes/slack"
+	"sync"
 )
 
 // slack RTM uses channel name to join channel, but everything else uses channel id
@@ -39,7 +39,7 @@ type client interface {
 
 // our slack implementation makes consistent use of channel id
 type Slack interface {
-	SendMessage(message, channelId string)
+	SendMessage(message, channelId, threadTimestamp string)
 	SendRichMessage(rm RichMessage) error
 	Broadcast(message string)
 	JoinChannel(channelId string)
@@ -95,11 +95,13 @@ func NewSlack(backup Backup, token string, defaultChannel string) Slack {
 }
 
 // Sends slack message to provided channel. Channel does not have to be joined.
-func (sl *slack) SendMessage(message, channelId string) {
+func (sl *slack) SendMessage(message, channelId, threadTimestamp string) {
 
 	msg := sl.client.NewOutgoingMessage(message, channelId)
+	msg.ThreadTimestamp = threadTimestamp
 	sl.client.SendMessage(msg)
 	logger.Infof("message=%q sent to channel=%s", msg.Text, channelId)
+
 }
 
 func (sl *slack) SendRichMessage(rm RichMessage) error {
@@ -114,7 +116,7 @@ func (sl *slack) SendRichMessage(rm RichMessage) error {
 func (sl *slack) Broadcast(message string) {
 
 	sl.joinedChannelIds.Range(func(channelId, _ interface{}) bool {
-		sl.SendMessage(message, channelId.(string))
+		sl.SendMessage(message, channelId.(string), "")
 		return true
 	})
 }
@@ -139,7 +141,7 @@ func (sl *slack) JoinChannel(channelId string) {
 	}
 
 	sl.backup.Backup(sl.JoinedChannels())
-	sl.SendMessage("Hello! I've joined this room ...", channelId)
+	sl.SendMessage("Hello! I've joined this room ...", channelId, "")
 	logger.Infof("joined channel=%s", channelId)
 }
 
@@ -148,7 +150,7 @@ func (sl *slack) JoinChannel(channelId string) {
 func (sl *slack) LeaveChannel(channelId string) {
 
 	// rtm does not send message if channel is not joined
-	sl.SendMessage("I'm leaving now, bye!", channelId)
+	sl.SendMessage("I'm leaving now, bye!", channelId, "")
 
 	if _, err := sl.client.LeaveChannel(channelId); err != nil {
 		logger.Errorf("cannot leave channel=%s: %v", channelId, err)
@@ -203,17 +205,20 @@ func toFlyteMessageEvent(event *s.MessageEvent, user *s.User) flyte.Event {
 }
 
 type messageEvent struct {
-	ChannelId string `json:"channelId"`
-	User      user   `json:"user"`
-	Message   string `json:"message"`
+	ChannelId       string `json:"channelId"`
+	User            user   `json:"user"`
+	Message         string `json:"message"`
+	Timestamp       string `json:"timestamp"`
+	ThreadTimestamp string `json:"threadTimestamp"`
 }
 
 func newMessageEvent(e *s.MessageEvent, u *s.User) messageEvent {
-
 	return messageEvent{
-		ChannelId: e.Channel,
-		User:      newUser(u),
-		Message:   e.Text,
+		ChannelId:       e.Channel,
+		User:            newUser(u),
+		Message:         e.Text,
+		Timestamp:       e.Timestamp,
+		ThreadTimestamp: e.ThreadTimestamp,
 	}
 }
 
