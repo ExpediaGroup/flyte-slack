@@ -36,7 +36,8 @@ All the events have the same fields as the command input plus error (in case of 
 
     {
         "message": "...", // required
-        "channelId": "..." // required
+        "channelId": "...", // required
+        "threadTimestamp": "..." // optional
     }
 
 Returned events
@@ -45,14 +46,15 @@ Returned events
 
     {
         "message": "...",
-        "channelId": "..."
+        "channelId": "...",
+        "threadTimestamp": "..."
     }
 
 `SendMessageFailed`
 
     {
         "message": "...",
-        "channelId": "..."
+        "channelId": "...",
         "error": "..."
     }
 
@@ -156,7 +158,9 @@ Returned events
             "email": "...",
             "title": "...",      // e.g. Principal Systems Engineer
             "firstName": "...",
-            "lastName": "..."
+            "lastName": "...",
+            "timestamp": "...",
+            "threadTimestamp": "..."
         },
         "message": "..."
     }
