@@ -209,35 +209,6 @@ func TestJoinBacksUpChannels(t *testing.T) {
 	assert.Equal(t, "id-abc", backedUpChannels[0])
 }
 
-func TestJoinDoesNotBacksUpChannelsIfJoinCallErrors(t *testing.T) {
-
-	Before(t)
-	defer After()
-	c1 := &s.Channel{}
-	c1.Name = "name-abc"
-	SlackMockClient.AddMockGetChannelInfoCall("id-abc", c1, nil)
-	SlackMockClient.AddMockJoinChannelCall("name-abc", errors.New("test join error"))
-
-	SlackImpl.JoinChannel("id-abc")
-
-	backedUpChannels := SlackBackup.Load()
-	require.Equal(t, 0, len(backedUpChannels))
-}
-
-func TestJoinDoesNotSendJoinMessageIfJoinCallErrors(t *testing.T) {
-
-	Before(t)
-	defer After()
-	c1 := &s.Channel{}
-	c1.Name = "name-abc"
-	SlackMockClient.AddMockGetChannelInfoCall("id-abc", c1, nil)
-	SlackMockClient.AddMockJoinChannelCall("name-abc", errors.New("test join error"))
-
-	SlackImpl.JoinChannel("id-abc")
-
-	require.Equal(t, 0, len(SlackMockClient.OutgoingMessages))
-}
-
 func TestMultipleJoinCallsSendOnlyOneJoinMessage(t *testing.T) {
 
 	Before(t)
