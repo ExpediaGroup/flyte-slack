@@ -133,11 +133,8 @@ func TestPostMessageReturnsEventWithInputMessageAsPayload(t *testing.T) {
 }
 
 func TestWiring(t *testing.T) {
-	var richMessage client.RichMessage
-
 	slack := NewMockSlack()
 	slack.SendRichMessageFunc = func(rm client.RichMessage) error {
-		richMessage = rm
 		return nil
 	}
 

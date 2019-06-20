@@ -129,16 +129,19 @@ func (sl *slack) JoinChannel(channelId string) {
 		return
 	}
 
-	channel, err := sl.client.GetChannelInfo(channelId)
-	if err != nil {
-		logger.Errorf("cannot join channel=%s: cannot get channel info: %v", channelId, err)
-		return
-	}
-
-	if _, err = sl.client.JoinChannel(channel.Name); err != nil {
-		logger.Errorf("cannot join channel=%s: %v", channelId, err)
-		return
-	}
+	// due to api changes and that we are now using slack app/bot this bit doesn't apply anymore
+	// keeping it for future reference when rewriting pack
+	//
+	//channel, err := sl.client.GetChannelInfo(channelId)
+	//if err != nil {
+	//	logger.Errorf("cannot join channel=%s: cannot get channel info: %v", channelId, err)
+	//	return
+	//}
+	//
+	//if _, err = sl.client.JoinChannel(channel.Name); err != nil {
+	//	logger.Errorf("cannot join channel=%s: %v", channelId, err)
+	//	return
+	//}
 
 	sl.backup.Backup(sl.JoinedChannels())
 	sl.SendMessage("Hello! I've joined this room ...", channelId, "")
