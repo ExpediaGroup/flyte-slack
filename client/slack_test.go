@@ -231,59 +231,24 @@ func TestMultipleJoinCallsSendOnlyOneJoinMessage(t *testing.T) {
 	assert.Equal(t, "Hello! I've joined this room ...", SlackMockClient.OutgoingMessages["id-abc"][0].Text)
 }
 
-func TestLeaveRemovesChannelAndSendsLeaveMessage(t *testing.T) {
-
+func TestLeaveSendsLeaveMessageAndRemovesChannelIdFromJoinedListAndBackup(t *testing.T) {
 	Before(t)
 	defer After()
-	c1 := &s.Channel{}
-	c1.Name = "name-abc"
-	SlackMockClient.AddMockGetChannelInfoCall("id-abc", c1, nil)
-	SlackMockClient.AddMockJoinChannelCall("name-abc", nil)
-	SlackMockClient.AddMockLeaveChannelCall("id-abc", false, nil)
+	channelId := "joined-id"
 
-	SlackImpl.JoinChannel("id-abc")
-	SlackImpl.LeaveChannel("id-abc")
+	// given a channel has joined and is part of the backup
+	SlackImpl.JoinChannel(channelId)
+	require.Equal(t, "Hello! I've joined this room ...", SlackMockClient.OutgoingMessages[channelId][0].Text)
+	require.Equal(t, 1, len(SlackImpl.JoinedChannels()))
+	require.Equal(t, 1, len(SlackBackup.Load()))
 
-	assert.NotContains(t, SlackImpl.JoinedChannels(), "id-abc")
-	require.Equal(t, 1, len(SlackMockClient.OutgoingMessages))
-	require.Equal(t, 2, len(SlackMockClient.OutgoingMessages["id-abc"]))
-	assert.Equal(t, "Hello! I've joined this room ...", SlackMockClient.OutgoingMessages["id-abc"][0].Text)
-	assert.Equal(t, "I'm leaving now, bye!", SlackMockClient.OutgoingMessages["id-abc"][1].Text)
-}
+	// when this channel leaves...
+	SlackImpl.LeaveChannel(channelId)
 
-func TestLeaveRemovesChannelFromBackup(t *testing.T) {
-
-	Before(t)
-	defer After()
-	c1 := &s.Channel{}
-	c1.Name = "name-abc"
-	SlackMockClient.AddMockGetChannelInfoCall("id-abc", c1, nil)
-	SlackMockClient.AddMockJoinChannelCall("name-abc", nil)
-	SlackMockClient.AddMockLeaveChannelCall("id-abc", false, nil)
-
-	// join - channel is backed up
-	SlackImpl.JoinChannel("id-abc")
-	backedUpChannels := SlackBackup.Load()
-	require.Equal(t, 1, len(backedUpChannels))
-
-	// leave - channel is removed from back up
-	SlackImpl.LeaveChannel("id-abc")
-	backedUpChannels = SlackBackup.Load()
-	require.Equal(t, 0, len(backedUpChannels))
-}
-
-// rtm.SendMessage (different than rtm.PostMessage - which is api http POST call)
-// sends message only if the channel is joined. Therefore send message has to
-// be called before leave channel (and it is safe as well - it won't send the message
-// if the channel is not joined)
-func TestLeaveSendsLeaveMessageBeforeItCallsLeaveChannel(t *testing.T) {
-
-	Before(t)
-	defer After()
-	SlackMockClient.AddMockLeaveChannelCall("not-joined", true, nil)
-
-	SlackImpl.LeaveChannel("not-joined")
-	require.Equal(t, 1, len(SlackMockClient.OutgoingMessages))
+	// then a message will have been sent and the channel is removed from the joined channels list and backup
+	require.Equal(t, "I'm leaving now, bye!", SlackMockClient.OutgoingMessages[channelId][1].Text)
+	require.Equal(t, 0, len(SlackImpl.JoinedChannels()))
+	require.Equal(t, 0, len(SlackBackup.Load()))
 }
 
 // same as test above, message has to be send before we leave channel
