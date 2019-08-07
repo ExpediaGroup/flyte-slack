@@ -251,36 +251,6 @@ func TestLeaveSendsLeaveMessageAndRemovesChannelIdFromJoinedListAndBackup(t *tes
 	require.Equal(t, 0, len(SlackBackup.Load()))
 }
 
-// same as test above, message has to be send before we leave channel
-func TestLeaveSendsLeaveMessageIfLeaveCallErrors(t *testing.T) {
-
-	Before(t)
-	defer After()
-	SlackMockClient.AddMockLeaveChannelCall("id-errors", false, errors.New("test leave error"))
-
-	SlackImpl.LeaveChannel("id-errors")
-	require.Equal(t, 1, len(SlackMockClient.OutgoingMessages))
-}
-
-func TestLeaveDoesNotRemoveChannelFromBackupIfLeaveCallErrors(t *testing.T) {
-
-	Before(t)
-	defer After()
-	c1 := &s.Channel{}
-	c1.Name = "name-errors-on-leave"
-	SlackMockClient.AddMockGetChannelInfoCall("id-errors-on-leave", c1, nil)
-	SlackMockClient.AddMockJoinChannelCall("name-errors-on-leave", nil)
-	SlackMockClient.AddMockLeaveChannelCall("id-errors-on-leave", false, errors.New("test leave error"))
-
-	SlackImpl.JoinChannel("id-errors-on-leave")
-	backedUpChannels := SlackBackup.Load()
-	require.Equal(t, 1, len(backedUpChannels))
-
-	SlackImpl.LeaveChannel("id-errors-on-leave")
-	backedUpChannels = SlackBackup.Load()
-	require.Equal(t, 1, len(backedUpChannels))
-}
-
 func TestIncomingMessages(t *testing.T) {
 
 	Before(t)
