@@ -155,10 +155,13 @@ func (sl *slack) LeaveChannel(channelId string) {
 	// rtm does not send message if channel is not joined
 	sl.SendMessage("I'm leaving now, bye!", channelId, "")
 
-	if _, err := sl.client.LeaveChannel(channelId); err != nil {
-		logger.Errorf("cannot leave channel=%s: %v", channelId, err)
-		return
-	}
+	// due to api changes and that we are now using slack app/bot this bit doesn't apply anymore
+	// keeping it for future reference when rewriting pack
+	//
+	//if _, err := sl.client.LeaveChannel(channelId); err != nil {
+	//	logger.Errorf("cannot leave channel=%s: %v", channelId, err)
+	//	return
+	//}
 
 	sl.joinedChannelIds.Delete(channelId)
 	sl.backup.Backup(sl.JoinedChannels())
