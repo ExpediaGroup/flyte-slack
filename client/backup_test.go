@@ -17,12 +17,12 @@ limitations under the License.
 package client
 
 import (
+	"github.com/HotelsDotCom/go-logger/loggertest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"github.com/HotelsDotCom/go-logger/loggertest"
 	"testing"
 )
 

@@ -8,8 +8,7 @@ A Slack pack for flyte.
 
 ## Build
 
-Pack requires go version min. 1.9 and uses dep to manage dependencies (install dep and run `dep ensure`
-before build/test)
+Pack requires go version min. 1.11
 
 - go build `go build`
 - go test `go test ./...`

@@ -17,9 +17,9 @@ limitations under the License.
 package main
 
 import (
+	"github.com/HotelsDotCom/go-logger"
 	"net/url"
 	"os"
-	"github.com/HotelsDotCom/go-logger"
 )
 
 const (

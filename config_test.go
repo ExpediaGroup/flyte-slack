@@ -17,9 +17,9 @@ limitations under the License.
 package main
 
 import (
+	"github.com/HotelsDotCom/go-logger/loggertest"
 	"github.com/stretchr/testify/assert"
 	"os"
-	"github.com/HotelsDotCom/go-logger/loggertest"
 	"testing"
 )
 

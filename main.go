@@ -17,14 +17,14 @@ limitations under the License.
 package main
 
 import (
-	"net/url"
-	"os"
-	"os/signal"
 	api "github.com/HotelsDotCom/flyte-client/client"
 	"github.com/HotelsDotCom/flyte-client/flyte"
 	"github.com/HotelsDotCom/flyte-slack/client"
 	"github.com/HotelsDotCom/flyte-slack/command"
 	"github.com/HotelsDotCom/go-logger"
+	"net/url"
+	"os"
+	"os/signal"
 	"syscall"
 	"time"
 )
