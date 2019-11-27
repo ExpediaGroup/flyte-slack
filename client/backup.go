@@ -18,10 +18,10 @@ package client
 
 import (
 	"encoding/json"
+	"github.com/HotelsDotCom/go-logger"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"github.com/HotelsDotCom/go-logger"
 )
 
 type Backup interface {

@@ -19,13 +19,13 @@ package client
 import (
 	"errors"
 	"fmt"
+	"github.com/HotelsDotCom/go-logger/loggertest"
 	s "github.com/nlopes/slack"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/HotelsDotCom/go-logger/loggertest"
+	"strings"
 	"testing"
 	"time"
-	"strings"
 )
 
 var SlackImpl Slack
@@ -117,7 +117,7 @@ func TestSendRichMessageShouldLogOnSuccess(t *testing.T) {
 		return "", "", nil
 	}
 
-	rm := RichMessage{ChannelID: "channel id", Text:"hello?", ThreadTimestamp:"now"}
+	rm := RichMessage{ChannelID: "channel id", Text: "hello?", ThreadTimestamp: "now"}
 	SlackImpl.SendRichMessage(rm)
 
 	msgs := loggertest.GetLogMessages()
@@ -134,7 +134,7 @@ func TestSendRichMessageShouldReturnErrorOnFailure(t *testing.T) {
 		return "", "", errors.New("barf")
 	}
 
-	rm := RichMessage{ChannelID: "channel id", Text:"hello?", ThreadTimestamp:"now"}
+	rm := RichMessage{ChannelID: "channel id", Text: "hello?", ThreadTimestamp: "now"}
 	err := SlackImpl.SendRichMessage(rm)
 
 	require.NotNil(t, err)
@@ -370,7 +370,7 @@ func TestIncomingMessagesOnLeftChannel(t *testing.T) {
 	SlackMockClient.AddMockGetChannelInfoCall("id-abc", c1, nil)
 	SlackMockClient.AddMockJoinChannelCall("name-abc", nil)
 	SlackMockClient.AddMockLeaveChannelCall("id-abc", false, nil)
-	u := &s.User{ID:"user-id", Name: "kfoox"}
+	u := &s.User{ID: "user-id", Name: "kfoox"}
 	SlackMockClient.AddMockGetUserInfoCall("user-id", u, nil)
 
 	// join abc channel
@@ -410,7 +410,7 @@ func TestIncomingMessagesOnJoinedChannel(t *testing.T) {
 	c1.Name = "name-123"
 	SlackMockClient.AddMockGetChannelInfoCall("id-123", c1, nil)
 	SlackMockClient.AddMockJoinChannelCall("name-123", nil)
-	u := &s.User{ID:"user-id", Name: "kfoox"}
+	u := &s.User{ID: "user-id", Name: "kfoox"}
 	SlackMockClient.AddMockGetUserInfoCall("user-id", u, nil)
 
 	// send message (no channel is joined yet)

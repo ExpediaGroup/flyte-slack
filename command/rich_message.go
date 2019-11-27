@@ -17,10 +17,10 @@ limitations under the License.
 package command
 
 import (
-	"github.com/HotelsDotCom/flyte-slack/client"
-	"github.com/HotelsDotCom/flyte-client/flyte"
 	"encoding/json"
 	"fmt"
+	"github.com/HotelsDotCom/flyte-client/flyte"
+	"github.com/HotelsDotCom/flyte-slack/client"
 	"github.com/HotelsDotCom/go-logger"
 )
 
@@ -60,8 +60,8 @@ func sendRichMessageHandler(sender RichMessageSender) flyte.CommandHandler {
 			return flyte.Event{
 				EventDef: sendRichMessageFailedEventDef,
 				Payload: SendRichMessageErrorOutput{
-					InputMessage:input,
-					Error:err.Error(),
+					InputMessage: input,
+					Error:        err.Error(),
 				},
 			}
 		}

@@ -45,17 +45,17 @@ func (m RichMessage) Post(rtm MessagePoster) error {
 
 func (m RichMessage) toPostMessageParameters() s.PostMessageParameters {
 	return s.PostMessageParameters{
-		AsUser: true,
-		Parse: m.Parse,
+		AsUser:          true,
+		Parse:           m.Parse,
 		ThreadTimestamp: m.ThreadTimestamp,
-		ReplyBroadcast: m.ReplyBroadcast,
-		LinkNames: m.LinkNames,
-		Attachments: m.Attachments,
-		UnfurlLinks: m.UnfurlLinks,
-		UnfurlMedia: m.UnfurlMedia,
-		IconURL: m.IconURL,
-		IconEmoji: m.IconEmoji,
-		Markdown: m.Markdown,
-		EscapeText: m.EscapeText,
+		ReplyBroadcast:  m.ReplyBroadcast,
+		LinkNames:       m.LinkNames,
+		Attachments:     m.Attachments,
+		UnfurlLinks:     m.UnfurlLinks,
+		UnfurlMedia:     m.UnfurlMedia,
+		IconURL:         m.IconURL,
+		IconEmoji:       m.IconEmoji,
+		Markdown:        m.Markdown,
+		EscapeText:      m.EscapeText,
 	}
 }

@@ -17,11 +17,11 @@ limitations under the License.
 package main
 
 import (
+	"github.com/HotelsDotCom/flyte-client/flyte"
+	"github.com/HotelsDotCom/flyte-slack/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/HotelsDotCom/flyte-client/flyte"
 	"testing"
-	"github.com/HotelsDotCom/flyte-slack/client"
 )
 
 func TestPackDefinitionIsPopulated(t *testing.T) {

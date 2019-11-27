@@ -17,15 +17,15 @@ limitations under the License.
 package command
 
 import (
+	"encoding/json"
+	"errors"
+	"github.com/HotelsDotCom/flyte-client/flyte"
+	"github.com/HotelsDotCom/flyte-slack/client"
+	"github.com/HotelsDotCom/go-logger/loggertest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
-	"github.com/HotelsDotCom/flyte-slack/client"
-	"github.com/HotelsDotCom/flyte-client/flyte"
-	"github.com/HotelsDotCom/go-logger/loggertest"
 	"strings"
-	"errors"
-	"encoding/json"
+	"testing"
 )
 
 func TestPostMessageCommandIsPopulated(t *testing.T) {
