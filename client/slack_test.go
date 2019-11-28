@@ -29,14 +29,12 @@ import (
 )
 
 var SlackImpl Slack
-var SlackBackup Backup
 var SlackMockClient *MockClient
 
 func Before(t *testing.T) {
 
 	loggertest.Init("DEBUG")
-	SlackBackup = NewInMemoryBackup()
-	SlackImpl = NewSlack(SlackBackup, "token", "")
+	SlackImpl = NewSlack("token")
 	SlackMockClient = NewMockClient(t)
 	SlackImpl.(*slack).client = SlackMockClient
 }
@@ -143,122 +141,12 @@ func TestSendRichMessageShouldReturnErrorOnFailure(t *testing.T) {
 	assert.True(t, strings.HasSuffix(errMsg, ": barf"), "expected message to end with \": barf\", actual: %q", errMsg)
 }
 
-func TestBroadcastSendsMessageToAllJoinedChannels(t *testing.T) {
-
-	Before(t)
-	defer After()
-	c1 := &s.Channel{}
-	c1.Name = "name-1"
-	SlackMockClient.AddMockGetChannelInfoCall("id-1", c1, nil)
-	SlackMockClient.AddMockJoinChannelCall("name-1", nil)
-	c2 := &s.Channel{}
-	c2.Name = "name-2"
-	SlackMockClient.AddMockGetChannelInfoCall("id-2", c2, nil)
-	SlackMockClient.AddMockJoinChannelCall("name-2", nil)
-	c3 := &s.Channel{}
-	c3.Name = "name-3"
-	SlackMockClient.AddMockGetChannelInfoCall("id-3", c3, nil)
-	SlackMockClient.AddMockJoinChannelCall("name-3", nil)
-
-	SlackImpl.JoinChannel("id-1")
-	SlackImpl.JoinChannel("id-2")
-	SlackImpl.JoinChannel("id-3")
-
-	SlackImpl.Broadcast("sending message to all joined channels")
-
-	// 3 rooms, 2 messages in each room (first one is join message)
-	require.Equal(t, 3, len(SlackMockClient.OutgoingMessages))
-	require.Equal(t, 2, len(SlackMockClient.OutgoingMessages["id-1"]))
-	require.Equal(t, 2, len(SlackMockClient.OutgoingMessages["id-2"]))
-	require.Equal(t, 2, len(SlackMockClient.OutgoingMessages["id-3"]))
-
-	assert.Equal(t, "sending message to all joined channels", SlackMockClient.OutgoingMessages["id-1"][1].Text)
-	assert.Equal(t, "sending message to all joined channels", SlackMockClient.OutgoingMessages["id-2"][1].Text)
-	assert.Equal(t, "sending message to all joined channels", SlackMockClient.OutgoingMessages["id-3"][1].Text)
-}
-
-func TestJoinPersistsChannelAndSendsJoinMessage(t *testing.T) {
-
-	Before(t)
-	defer After()
-	c1 := &s.Channel{}
-	c1.Name = "name-abc"
-	SlackMockClient.AddMockGetChannelInfoCall("id-abc", c1, nil)
-	SlackMockClient.AddMockJoinChannelCall("name-abc", nil)
-
-	SlackImpl.JoinChannel("id-abc")
-
-	assert.Contains(t, SlackImpl.JoinedChannels(), "id-abc")
-	require.Equal(t, 1, len(SlackMockClient.OutgoingMessages))
-	assert.Equal(t, "Hello! I've joined this room ...", SlackMockClient.OutgoingMessages["id-abc"][0].Text)
-}
-
-func TestJoinBacksUpChannels(t *testing.T) {
-
-	Before(t)
-	defer After()
-	c1 := &s.Channel{}
-	c1.Name = "name-abc"
-	SlackMockClient.AddMockGetChannelInfoCall("id-abc", c1, nil)
-	SlackMockClient.AddMockJoinChannelCall("name-abc", nil)
-
-	SlackImpl.JoinChannel("id-abc")
-
-	backedUpChannels := SlackBackup.Load()
-	require.Equal(t, 1, len(backedUpChannels))
-	assert.Equal(t, "id-abc", backedUpChannels[0])
-}
-
-func TestMultipleJoinCallsSendOnlyOneJoinMessage(t *testing.T) {
-
-	Before(t)
-	defer After()
-	c1 := &s.Channel{}
-	c1.Name = "name-abc"
-	SlackMockClient.AddMockGetChannelInfoCall("id-abc", c1, nil)
-	SlackMockClient.AddMockJoinChannelCall("name-abc", nil)
-	SlackMockClient.AddMockGetChannelInfoCall("id-abc", c1, nil)
-	SlackMockClient.AddMockJoinChannelCall("name-abc", nil)
-	SlackMockClient.AddMockGetChannelInfoCall("id-abc", c1, nil)
-	SlackMockClient.AddMockJoinChannelCall("name-abc", nil)
-
-	SlackImpl.JoinChannel("id-abc")
-	SlackImpl.JoinChannel("id-abc")
-	SlackImpl.JoinChannel("id-abc")
-
-	assert.Contains(t, SlackImpl.JoinedChannels(), "id-abc")
-	require.Equal(t, 1, len(SlackMockClient.OutgoingMessages))
-	assert.Equal(t, "Hello! I've joined this room ...", SlackMockClient.OutgoingMessages["id-abc"][0].Text)
-}
-
-func TestLeaveSendsLeaveMessageAndRemovesChannelIdFromJoinedListAndBackup(t *testing.T) {
-	Before(t)
-	defer After()
-	channelId := "joined-id"
-
-	// given a channel has joined and is part of the backup
-	SlackImpl.JoinChannel(channelId)
-	require.Equal(t, "Hello! I've joined this room ...", SlackMockClient.OutgoingMessages[channelId][0].Text)
-	require.Equal(t, 1, len(SlackImpl.JoinedChannels()))
-	require.Equal(t, 1, len(SlackBackup.Load()))
-
-	// when this channel leaves...
-	SlackImpl.LeaveChannel(channelId)
-
-	// then a message will have been sent and the channel is removed from the joined channels list and backup
-	require.Equal(t, "I'm leaving now, bye!", SlackMockClient.OutgoingMessages[channelId][1].Text)
-	require.Equal(t, 0, len(SlackImpl.JoinedChannels()))
-	require.Equal(t, 0, len(SlackBackup.Load()))
-}
-
 func TestIncomingMessages(t *testing.T) {
 
 	Before(t)
 	defer After()
 	c1 := &s.Channel{}
 	c1.Name = "name-abc"
-	SlackMockClient.AddMockGetChannelInfoCall("id-abc", c1, nil)
-	SlackMockClient.AddMockJoinChannelCall("name-abc", nil)
 	u := &s.User{
 		ID:   "user-id-123",
 		Name: "kfoox",
@@ -272,7 +160,6 @@ func TestIncomingMessages(t *testing.T) {
 	SlackMockClient.AddMockGetUserInfoCall("user-id-123", u, nil)
 
 	incomingMessages := SlackImpl.IncomingMessages()
-	SlackImpl.JoinChannel("id-abc")
 	sendSlackMessage(SlackImpl, "hello there ...", "id-abc", "user-id-123", "now", "thread")
 	time.Sleep(50 * time.Millisecond)
 
@@ -304,8 +191,6 @@ func TestIncomingMessagesLogging(t *testing.T) {
 	loggertest.ClearLogMessages()
 	c1 := &s.Channel{}
 	c1.Name = "name-abc"
-	SlackMockClient.AddMockGetChannelInfoCall("id-abc", c1, nil)
-	SlackMockClient.AddMockJoinChannelCall("name-abc", nil)
 	u := &s.User{
 		ID:   "user-id-123",
 		Name: "kfoox",
@@ -319,126 +204,15 @@ func TestIncomingMessagesLogging(t *testing.T) {
 	SlackMockClient.AddMockGetUserInfoCall("user-id-123", u, nil)
 
 	// when
-	SlackImpl.JoinChannel("id-abc")
 	sendSlackMessage(SlackImpl, "hello there ...", "id-abc", "user-id-123", "", "")
 	time.Sleep(50 * time.Millisecond)
 
 	// then
 	msgs := loggertest.GetLogMessages()
-	require.Equal(t, 3, len(msgs))
-	assert.Equal(t, "message=\"Hello! I've joined this room ...\" sent to channel=id-abc", msgs[0].Message)
-	assert.Equal(t, loggertest.LogLevelInfo, msgs[0].Level)
+	require.Equal(t, 1, len(msgs))
 
-	assert.Equal(t, "joined channel=id-abc", msgs[1].Message)
-	assert.Equal(t, loggertest.LogLevelInfo, msgs[1].Level)
-
-	assert.Equal(t, "received message=hello there ... in channel=id-abc", msgs[2].Message)
-	assert.Equal(t, loggertest.LogLevelDebug, msgs[2].Level)
-}
-
-func TestIncomingMessagesOnChannelThatIsNotJoined(t *testing.T) {
-
-	Before(t)
-	defer After()
-	c1 := &s.Channel{}
-	c1.Name = "name-abc"
-	SlackMockClient.AddMockGetChannelInfoCall("id-abc", c1, nil)
-	SlackMockClient.AddMockJoinChannelCall("name-abc", nil)
-
-	// join abc channel
-	SlackImpl.JoinChannel("id-abc")
-	incomingMessages := SlackImpl.IncomingMessages()
-
-	// send message to xyz channel
-	sendSlackMessage(SlackImpl, "hello there ...", "xyz", "user-id", "", "")
-	time.Sleep(50 * time.Millisecond)
-
-	select {
-	case msg := <-incomingMessages:
-		assert.Fail(t, fmt.Sprintf("did not expect any message event, got %s: %v", msg.EventDef.Name, msg.Payload))
-	default:
-		// do not block
-	}
-}
-
-func TestIncomingMessagesOnLeftChannel(t *testing.T) {
-
-	Before(t)
-	defer After()
-	c1 := &s.Channel{}
-	c1.Name = "name-abc"
-	SlackMockClient.AddMockGetChannelInfoCall("id-abc", c1, nil)
-	SlackMockClient.AddMockJoinChannelCall("name-abc", nil)
-	SlackMockClient.AddMockLeaveChannelCall("id-abc", false, nil)
-	u := &s.User{ID: "user-id", Name: "kfoox"}
-	SlackMockClient.AddMockGetUserInfoCall("user-id", u, nil)
-
-	// join abc channel
-	SlackImpl.JoinChannel("id-abc")
-	incomingMessages := SlackImpl.IncomingMessages()
-
-	sendSlackMessage(SlackImpl, "hello there ...", "id-abc", "user-id", "", "")
-	time.Sleep(50 * time.Millisecond)
-
-	// consume message
-	select {
-	case msg := <-incomingMessages:
-		assert.Equal(t, "hello there ...", msg.Payload.(messageEvent).Message)
-	default:
-		assert.Fail(t, "expected message event")
-	}
-
-	// leave abc channel and send another message to that channel
-	SlackImpl.LeaveChannel("id-abc")
-	sendSlackMessage(SlackImpl, "hello there ...", "id-abc", "user-id", "", "")
-	time.Sleep(50 * time.Millisecond)
-
-	// no message should be received (we left the channel)
-	select {
-	case <-incomingMessages:
-		assert.Fail(t, "did not expect any message event")
-	default:
-		// do not block
-	}
-}
-
-func TestIncomingMessagesOnJoinedChannel(t *testing.T) {
-
-	Before(t)
-	defer After()
-	c1 := &s.Channel{}
-	c1.Name = "name-123"
-	SlackMockClient.AddMockGetChannelInfoCall("id-123", c1, nil)
-	SlackMockClient.AddMockJoinChannelCall("name-123", nil)
-	u := &s.User{ID: "user-id", Name: "kfoox"}
-	SlackMockClient.AddMockGetUserInfoCall("user-id", u, nil)
-
-	// send message (no channel is joined yet)
-	sendSlackMessage(SlackImpl, "hello there ...", "id-123", "user-id", "", "")
-
-	// no message should be received (no channel is joined)
-	incomingMessages := SlackImpl.IncomingMessages()
-	time.Sleep(50 * time.Millisecond)
-
-	select {
-	case <-incomingMessages:
-		assert.Fail(t, "did not expect any message event")
-	default:
-		// do not block
-	}
-
-	// join 123 channel and send message to that channel
-	SlackImpl.JoinChannel("id-123")
-	sendSlackMessage(SlackImpl, "one two three ...", "id-123", "user-id", "", "")
-	time.Sleep(50 * time.Millisecond)
-
-	// consume message
-	select {
-	case msg := <-incomingMessages:
-		assert.Equal(t, "one two three ...", msg.Payload.(messageEvent).Message)
-	default:
-		//assert.Fail(t, "expected message event")
-	}
+	assert.Equal(t, "received message=hello there ... in channel=id-abc", msgs[0].Message)
+	assert.Equal(t, loggertest.LogLevelDebug, msgs[0].Level)
 }
 
 // --- helpers ---
@@ -461,12 +235,6 @@ func sendSlackMessage(slackImpl Slack, text, channel, userId, timestamp, threadT
 
 type MockClient struct {
 	t *testing.T
-	// Slice of mocked join channel functions (call to JoinChannel will pop from slice)
-	JoinChannelFns []func(channelName string) error
-	// Slice of mocked leave channel functions (call to LeaveChannel will pop from slice)
-	LeaveChannelFns []func(channelId string) (notInChannel bool, err error)
-	// Slice of mocked get channel info functions (call to GetChannelInfo will pop from slice)
-	GetChannelInfoFns []func(channelId string) (*s.Channel, error)
 	// Slice of mocked get user info functions (call to GetUserInfo will pop from slice)
 	GetUserInfoFns []func(userId string) (*s.User, error)
 	// map stores all the sent messages by channelId (key is channelId)
@@ -478,9 +246,6 @@ type MockClient struct {
 func NewMockClient(t *testing.T) *MockClient {
 
 	m := &MockClient{t: t}
-	m.JoinChannelFns = []func(channelId string) error{}
-	m.LeaveChannelFns = []func(channelId string) (bool, error){}
-	m.GetChannelInfoFns = []func(channelId string) (*s.Channel, error){}
 	m.GetUserInfoFns = []func(userId string) (*s.User, error){}
 	m.OutgoingMessages = make(map[string][]*s.OutgoingMessage)
 	m.PostMessageFunc = func(channel, text string, params s.PostMessageParameters) (string, string, error) {
@@ -490,36 +255,6 @@ func NewMockClient(t *testing.T) *MockClient {
 }
 
 // --- config methods ---
-
-func (m *MockClient) AddMockJoinChannelCall(expectedChannelName string, returnError error) {
-
-	x := func(channelName string) error {
-		errMessage := fmt.Sprintf("JoindChannel call expected %s channelName got %s", expectedChannelName, channelName)
-		require.Equal(m.t, expectedChannelName, channelName, errMessage)
-		return returnError
-	}
-	m.JoinChannelFns = append(m.JoinChannelFns, x)
-}
-
-func (m *MockClient) AddMockLeaveChannelCall(expectedChannelId string, returnNonInChannel bool, returnError error) {
-
-	x := func(channelId string) (bool, error) {
-		errMessage := fmt.Sprintf("LeaveChannel call expected %s channelId got %s", expectedChannelId, channelId)
-		require.Equal(m.t, expectedChannelId, channelId, errMessage)
-		return returnNonInChannel, returnError
-	}
-	m.LeaveChannelFns = append(m.LeaveChannelFns, x)
-}
-
-func (m *MockClient) AddMockGetChannelInfoCall(expectedChannelId string, returnChannel *s.Channel, returnError error) {
-
-	x := func(channelId string) (*s.Channel, error) {
-		errMessage := fmt.Sprintf("GetChannelInfo call expected %s channelId got %s", expectedChannelId, channelId)
-		require.Equal(m.t, expectedChannelId, channelId, errMessage)
-		return returnChannel, returnError
-	}
-	m.GetChannelInfoFns = append(m.GetChannelInfoFns, x)
-}
 
 func (m *MockClient) AddMockGetUserInfoCall(expectedUserId string, returnUser *s.User, returnError error) {
 
@@ -533,34 +268,6 @@ func (m *MockClient) AddMockGetUserInfoCall(expectedUserId string, returnUser *s
 
 // --- implementation ---
 
-func (m *MockClient) JoinChannel(channelName string) (*s.Channel, error) {
-
-	require.NotEmpty(m.t, m.JoinChannelFns, "Unexpected (not mocked) call to join channel")
-
-	var fn func(string) error
-	fn, m.JoinChannelFns = m.JoinChannelFns[0], m.JoinChannelFns[1:]
-	err := fn(channelName)
-	return nil, err
-}
-
-func (m *MockClient) LeaveChannel(channelId string) (notInChannel bool, err error) {
-
-	require.NotEmpty(m.t, m.LeaveChannelFns, "Unexpected (not mocked) call to leave channel")
-
-	var fn func(string) (bool, error)
-	fn, m.LeaveChannelFns = m.LeaveChannelFns[0], m.LeaveChannelFns[1:]
-	return fn(channelId)
-}
-
-func (m *MockClient) GetChannelInfo(channelId string) (*s.Channel, error) {
-
-	require.NotEmpty(m.t, m.GetChannelInfoFns, "Unexpected (not mocked) call to get channel info")
-
-	var fn func(string) (*s.Channel, error)
-	fn, m.GetChannelInfoFns = m.GetChannelInfoFns[0], m.GetChannelInfoFns[1:]
-	return fn(channelId)
-}
-
 func (m *MockClient) GetUserInfo(userId string) (*s.User, error) {
 
 	require.NotEmpty(m.t, m.GetUserInfoFns, "Unexpected (not mocked) call to get user info")
@@ -570,7 +277,7 @@ func (m *MockClient) GetUserInfo(userId string) (*s.User, error) {
 	return fn(userId)
 }
 
-func (m *MockClient) NewOutgoingMessage(message, channelId string) *s.OutgoingMessage {
+func (m *MockClient) NewOutgoingMessage(message, channelId string, options ...s.RTMsgOption) *s.OutgoingMessage {
 
 	return &s.OutgoingMessage{
 		ID:      666,
@@ -600,8 +307,4 @@ func (i *inMemoryBackup) Backup(channelIds []string) {
 
 func (i *inMemoryBackup) Load() []string {
 	return i.channelIds
-}
-
-func NewInMemoryBackup() Backup {
-	return &inMemoryBackup{}
 }

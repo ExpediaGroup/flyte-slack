@@ -23,10 +23,6 @@ import (
 
 type MockSlack struct {
 	SendMessageCalls    map[string][]string
-	BroadcastCalls      []string
-	JoinChannelCalls    []string
-	LeaveChannelCalls   []string
-	JoinedChannelsCalls int
 	SendRichMessageFunc func(rm client.RichMessage) error
 }
 
@@ -43,24 +39,6 @@ func (m *MockSlack) SendMessage(message, channelId, _ string) {
 
 func (m *MockSlack) SendRichMessage(rm client.RichMessage) error {
 	return m.SendRichMessageFunc(rm)
-}
-
-func (m *MockSlack) Broadcast(message string) {
-	m.BroadcastCalls = append(m.BroadcastCalls, message)
-}
-
-func (m *MockSlack) JoinChannel(channelId string) {
-	m.JoinChannelCalls = append(m.JoinChannelCalls, channelId)
-}
-
-func (m *MockSlack) LeaveChannel(channelId string) {
-	m.LeaveChannelCalls = append(m.LeaveChannelCalls, channelId)
-}
-
-func (m *MockSlack) JoinedChannels() []string {
-
-	m.JoinedChannelsCalls++
-	return m.JoinChannelCalls
 }
 
 func (m *MockSlack) IncomingMessages() <-chan flyte.Event {

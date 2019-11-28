@@ -25,8 +25,6 @@ import (
 const (
 	apiEnvKey            = "FLYTE_API"
 	tokenEnvKey          = "FLYTE_SLACK_TOKEN"
-	defaultChannelEnvKey = "FLYTE_SLACK_DEFAULT_JOIN_CHANNEL"
-	backupDirEnvKey      = "FLYTE_SLACK_BACKUP_DIR"
 )
 
 // extracted to variable for testing
@@ -44,14 +42,6 @@ func ApiHost() *url.URL {
 
 func SlackToken() string {
 	return getEnv(tokenEnvKey, true)
-}
-
-func DefaultChannel() string {
-	return getEnv(defaultChannelEnvKey, false)
-}
-
-func BackupDir() string {
-	return getEnv(backupDirEnvKey, false)
 }
 
 func getEnv(key string, required bool) string {

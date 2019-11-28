@@ -31,7 +31,7 @@ func TestPackDefinitionIsPopulated(t *testing.T) {
 	assert.Equal(t, "Slack", packDef.Name)
 	assert.Equal(t, "https://github.com/HotelsDotCom/flyte-slack/blob/master/README.md", packDef.HelpURL.String())
 	require.Equal(t, 0, len(packDef.Labels))
-	require.Equal(t, 5, len(packDef.Commands))
+	require.Equal(t, 2, len(packDef.Commands))
 	require.Equal(t, 1, len(packDef.EventDefs))
 }
 
@@ -42,16 +42,6 @@ type DummySlack struct{}
 func (DummySlack) SendMessage(message, channelId, threadTimestamp string) {}
 
 func (DummySlack) SendRichMessage(client.RichMessage) error { return nil }
-
-func (DummySlack) Broadcast(message string) {}
-
-func (DummySlack) JoinChannel(channelId string) {}
-
-func (DummySlack) LeaveChannel(channelId string) {}
-
-func (DummySlack) JoinedChannels() []string {
-	return []string{}
-}
 
 func (DummySlack) IncomingMessages() <-chan flyte.Event {
 	return make(chan flyte.Event)
