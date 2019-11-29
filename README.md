@@ -22,10 +22,8 @@ ENV VAR                          | Default  |  Description                      
  ------------------------------- |  ------- |  ----------------------------------------- |  ---------------------
 FLYTE_API                        | -        | The API endpoint to use                    | http://localhost:8080
 FLYTE_SLACK_TOKEN                | -        | The API token to use                       | token_abc
-FLYTE_SLACK_DEFAULT_JOIN_CHANNEL | -        | A channel to join by default when launched | 1234
-FLYTE_SLACK_BACKUP_DIR           | $TMPDIR  | Directory where to backup joined channels  | /flyte-slack
 
-Example `FLYTE_API=http://localhost:8080 FLYTE_SLACK_TOKEN=token_abc FLYTE_SLACK_DEFAULT_JOIN_CHANNEL=1234 ./flyte-slack`
+Example `FLYTE_API=http://localhost:8080 FLYTE_SLACK_TOKEN=token_abc ./flyte-slack`
 
 ## Commands
 
@@ -75,75 +73,6 @@ The returned event payload is the same as the input.
   "error": "..."
 }
 ```
-
-### Broadcast
-
-Same as send message, but without channel id. Message will be sent to all the channels that pack has joined.
-
-    {
-        "message": "..." // required
-    }
-
-Returned events
-
-`BroadcastSent`
-
-    {
-        "message": "..."
-    }
-
-`BroadcastFailed`
-
-    {
-        "message": "...",
-        "error": "..."
-    }
-
-### JoinChannel
-
-Joins channel, pack will start sending `ReceivedMessage` events if there's new message in the joined channel 
-
-    {
-        "channelId": "..." // required
-    }
-
-Returned events
-
-`ChannelJoined`
-
-    {
-        "channelId": "..."
-    }
-
-`JoinChannelFailed`
-
-    {
-        "channelId": "...",
-        "error": "..."
-    }
-
-### LeaveChannel
-
-Leaves Slack channel, channel will not be monitored for incoming messages.
-
-    {
-        "channelId": "..." // required
-    }
-
-Returned events
-
-`ChannelLeft`
-
-    {
-        "channelId": "..."
-    }
-
-`LeaveChannelFailed`
-
-    {
-        "channelId": "...",
-        "error": "..."
-    }
 
 ## Events 
 

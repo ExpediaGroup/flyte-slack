@@ -23,9 +23,6 @@ import (
 	"github.com/HotelsDotCom/flyte-slack/command"
 	"github.com/HotelsDotCom/go-logger"
 	"net/url"
-	"os"
-	"os/signal"
-	"syscall"
 	"time"
 )
 
@@ -33,21 +30,12 @@ const packDefHelpUrl = "https://github.com/HotelsDotCom/flyte-slack/blob/master/
 
 func main() {
 
-	slack := client.NewSlack(Backup(), SlackToken(), DefaultChannel())
+	slack := client.NewSlack(SlackToken())
 	packDef := GetPackDef(slack)
 	pack := flyte.NewPack(packDef, api.NewClient(ApiHost(), 10*time.Second))
 	pack.Start()
 
 	ListenAndServe(slack, pack)
-}
-
-func Backup() client.Backup {
-
-	backupDir := BackupDir()
-	if backupDir == "" {
-		return client.NewTmpFileBackup()
-	}
-	return client.NewFileBackup(backupDir)
 }
 
 func ListenAndServe(slack client.Slack, pack flyte.Pack) {
@@ -60,16 +48,7 @@ func ListenAndServe(slack client.Slack, pack flyte.Pack) {
 		}
 	}()
 
-	// block until we get an exit causing signal
-	signalCh := make(chan os.Signal)
-	signal.Notify(signalCh, os.Interrupt, syscall.SIGTERM)
-	select {
-	case <-signalCh:
-		logger.Info("received interrupt, shutting down ...")
-		slack.Broadcast("slack shutting down ...")
-		time.Sleep(2 * time.Second)
-		logger.Info("shut down")
-	}
+	select {}
 }
 
 func GetPackDef(slack client.Slack) flyte.PackDef {
@@ -85,9 +64,6 @@ func GetPackDef(slack client.Slack) flyte.PackDef {
 		Commands: []flyte.Command{
 			command.SendMessage(slack),
 			command.SendRichMessage(slack),
-			command.Broadcast(slack),
-			command.JoinChannel(slack),
-			command.LeaveChannel(slack),
 		},
 		EventDefs: []flyte.EventDef{
 			{Name: "ReceivedMessage"},

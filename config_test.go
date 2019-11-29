@@ -90,31 +90,3 @@ func TestSlackTokenEnvNotSet(t *testing.T) {
 
 	assert.Panics(t, func() { SlackToken() })
 }
-
-func TestDefaultChannelEnv(t *testing.T) {
-	assert.Equal(t, "", DefaultChannel())
-}
-
-func TestDefaultChannelEnvSetWhenNotSet(t *testing.T) {
-
-	BeforeConfig()
-	defer AfterConfig()
-
-	TestEnv["FLYTE_SLACK_DEFAULT_JOIN_CHANNEL"] = "abc"
-
-	assert.Equal(t, "abc", DefaultChannel())
-}
-
-func TestBackupDirEnvDefault(t *testing.T) {
-	assert.Equal(t, "", BackupDir())
-}
-
-func TestBackupDirEnv(t *testing.T) {
-
-	BeforeConfig()
-	defer AfterConfig()
-
-	TestEnv["FLYTE_SLACK_BACKUP_DIR"] = "/tmp/slack-pack"
-
-	assert.Equal(t, "/tmp/slack-pack", BackupDir())
-}
