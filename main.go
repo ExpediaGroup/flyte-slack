@@ -58,8 +58,13 @@ func GetPackDef(slack client.Slack) flyte.PackDef {
 		logger.Fatal("invalid pack help url")
 	}
 
+	packName := PackName()
+	if packName == "" {
+		packName = "Slack"
+	}
+
 	return flyte.PackDef{
-		Name:    "Slack",
+		Name:    packName,
 		HelpURL: helpUrl,
 		Commands: []flyte.Command{
 			command.SendMessage(slack),

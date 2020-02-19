@@ -25,6 +25,7 @@ import (
 const (
 	apiEnvKey            = "FLYTE_API"
 	tokenEnvKey          = "FLYTE_SLACK_TOKEN"
+	packName             = "PACK_NAME"
 )
 
 // extracted to variable for testing
@@ -38,6 +39,10 @@ func ApiHost() *url.URL {
 		logger.Fatalf("%s=%q is not valid URL: %v", apiEnvKey, hostEnv, err)
 	}
 	return host
+}
+
+func PackName() string {
+	return getEnv(packName, false)
 }
 
 func SlackToken() string {

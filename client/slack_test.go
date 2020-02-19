@@ -177,7 +177,43 @@ func TestIncomingMessages(t *testing.T) {
 		assert.Equal(t, "Foox", payload.User.LastName)
 		assert.Equal(t, "now", payload.Timestamp)
 		assert.Equal(t, "thread", payload.ThreadTimestamp)
+		assert.Equal(t, "thread", payload.Thread)
+	default:
+		assert.Fail(t, "expected message event")
+	}
 
+	//Test whether Thread is populated correctly
+	// if Timestamp= "now" and ThreadTimestamp = ""
+	// Thread = "now"
+	SlackMockClient.AddMockGetUserInfoCall("user-id-123", u, nil)
+	sendSlackMessage(SlackImpl, "hello there ...", "id-abc", "user-id-123", "now", "")
+	time.Sleep(50 * time.Millisecond)
+
+	select {
+	case msg := <-incomingMessages:
+		assert.Equal(t, "ReceivedMessage", msg.EventDef.Name)
+		payload := msg.Payload.(messageEvent)
+		assert.Equal(t, "now", payload.Timestamp)
+		assert.Equal(t, "", payload.ThreadTimestamp)
+		assert.Equal(t, "now", payload.Thread)
+	default:
+		assert.Fail(t, "expected message event")
+	}
+
+	//Test whether Thread is populated correctly
+	// if Timestamp= "Timestamp" and ThreadTimestamp = "ThreadTimestamp"
+	// Thread = "ThreadTimestamp"
+	SlackMockClient.AddMockGetUserInfoCall("user-id-123", u, nil)
+	sendSlackMessage(SlackImpl, "hello there ...", "id-abc", "user-id-123", "Timestamp", "ThreadTimestamp")
+	time.Sleep(50 * time.Millisecond)
+
+	select {
+	case msg := <-incomingMessages:
+		assert.Equal(t, "ReceivedMessage", msg.EventDef.Name)
+		payload := msg.Payload.(messageEvent)
+		assert.Equal(t, "Timestamp", payload.Timestamp)
+		assert.Equal(t, "ThreadTimestamp", payload.ThreadTimestamp)
+		assert.Equal(t, "ThreadTimestamp", payload.Thread)
 	default:
 		assert.Fail(t, "expected message event")
 	}

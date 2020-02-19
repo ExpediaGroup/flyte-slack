@@ -114,6 +114,7 @@ type messageEvent struct {
 	Message         string `json:"message"`
 	Timestamp       string `json:"timestamp"`
 	ThreadTimestamp string `json:"threadTimestamp"`
+	Thread string `json:"thread"`
 }
 
 func newMessageEvent(e *s.MessageEvent, u *s.User) messageEvent {
@@ -123,7 +124,15 @@ func newMessageEvent(e *s.MessageEvent, u *s.User) messageEvent {
 		Message:         e.Text,
 		Timestamp:       e.Timestamp,
 		ThreadTimestamp: e.ThreadTimestamp,
+		Thread: getThread(e),
 	}
+}
+
+func getThread(e *s.MessageEvent) string {
+	if e.ThreadTimestamp != "" {
+		return e.ThreadTimestamp
+	}
+	return e.Timestamp
 }
 
 type user struct {
