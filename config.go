@@ -25,13 +25,13 @@ import (
 const (
 	apiEnvKey            = "FLYTE_API"
 	tokenEnvKey          = "FLYTE_SLACK_TOKEN"
-	packName             = "PACK_NAME"
+	packNameKey          = "PACK_NAME"
 )
 
 // extracted to variable for testing
 var lookupEnv = os.LookupEnv
 
-func ApiHost() *url.URL {
+func apiHost() *url.URL {
 
 	hostEnv := getEnv(apiEnvKey, true)
 	host, err := url.Parse(hostEnv)
@@ -41,11 +41,11 @@ func ApiHost() *url.URL {
 	return host
 }
 
-func PackName() string {
-	return getEnv(packName, false)
+func packName() string {
+	return getEnv(packNameKey, false)
 }
 
-func SlackToken() string {
+func slackToken() string {
 	return getEnv(tokenEnvKey, true)
 }
 

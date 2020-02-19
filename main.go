@@ -27,12 +27,13 @@ import (
 )
 
 const packDefHelpUrl = "https://github.com/HotelsDotCom/flyte-slack/blob/master/README.md"
+const defaultPackName = "Slack"
 
 func main() {
 
-	slack := client.NewSlack(SlackToken())
+	slack := client.NewSlack(slackToken())
 	packDef := GetPackDef(slack)
-	pack := flyte.NewPack(packDef, api.NewClient(ApiHost(), 10*time.Second))
+	pack := flyte.NewPack(packDef, api.NewClient(apiHost(), 10*time.Second))
 	pack.Start()
 
 	ListenAndServe(slack, pack)
@@ -58,9 +59,9 @@ func GetPackDef(slack client.Slack) flyte.PackDef {
 		logger.Fatal("invalid pack help url")
 	}
 
-	packName := PackName()
+	packName := packName()
 	if packName == "" {
-		packName = "Slack"
+		packName = defaultPackName
 	}
 
 	return flyte.PackDef{

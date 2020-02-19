@@ -48,8 +48,16 @@ func TestApiHostEnv(t *testing.T) {
 
 	TestEnv["FLYTE_API"] = "http://test_api:8080"
 
-	url := ApiHost()
+	url := apiHost()
 	assert.Equal(t, "http://test_api:8080", url.String())
+}
+
+func TestPackName(t *testing.T) {
+	BeforeConfig()
+	defer AfterConfig()
+
+	TestEnv["PACK_NAME"] = "Slack2"
+	assert.Equal(t, "Slack2", packName())
 }
 
 func TestApiHostEnvNotSet(t *testing.T) {
@@ -57,7 +65,7 @@ func TestApiHostEnvNotSet(t *testing.T) {
 	BeforeConfig()
 	defer AfterConfig()
 
-	assert.Panics(t, func() { ApiHost() })
+	assert.Panics(t, func() { apiHost() })
 }
 
 func TestApiHostEnvInvalidUrl(t *testing.T) {
@@ -70,7 +78,7 @@ func TestApiHostEnvInvalidUrl(t *testing.T) {
 	loggertest.Init("DEBUG")
 	defer loggertest.Reset()
 
-	assert.Panics(t, func() { ApiHost() })
+	assert.Panics(t, func() { apiHost() })
 }
 
 func TestSlackTokenEnv(t *testing.T) {
@@ -80,7 +88,7 @@ func TestSlackTokenEnv(t *testing.T) {
 
 	TestEnv["FLYTE_SLACK_TOKEN"] = "abc"
 
-	assert.Equal(t, "abc", SlackToken())
+	assert.Equal(t, "abc", slackToken())
 }
 
 func TestSlackTokenEnvNotSet(t *testing.T) {
@@ -88,5 +96,5 @@ func TestSlackTokenEnvNotSet(t *testing.T) {
 	BeforeConfig()
 	defer AfterConfig()
 
-	assert.Panics(t, func() { SlackToken() })
+	assert.Panics(t, func() { slackToken() })
 }
