@@ -182,22 +182,22 @@ func TestIncomingMessages(t *testing.T) {
 	}
 	// Test whether Thread is properly populated or not
 	tests := []struct {
-		name                 string
-		inputTimestamp       string
-		inputThreadTimestamp string
-		expectedThread       string
+		name                    string
+		inputTimestamp          string
+		inputThreadTimestamp    string
+		expectedThreadTimestamp string
 	}{
 		{
-			name:                 "both Timestamp and ThreadTimestamp are defined",
-			inputTimestamp:       "ts",
-			inputThreadTimestamp: "tts",
-			expectedThread:       "tts",
+			name:                    "both Timestamp and ThreadTimestamp are defined",
+			inputTimestamp:          "ts",
+			inputThreadTimestamp:    "tts",
+			expectedThreadTimestamp: "tts",
 		},
 		{
-			name:                 "ThreadTimestamp is defined only",
-			inputTimestamp:       "ts",
-			inputThreadTimestamp: "",
-			expectedThread:       "ts",
+			name:                    "ThreadTimestamp is defined only",
+			inputTimestamp:          "ts",
+			inputThreadTimestamp:    "",
+			expectedThreadTimestamp: "ts",
 		},
 	}
 
@@ -211,7 +211,7 @@ func TestIncomingMessages(t *testing.T) {
 			case msg := <-incomingMessages:
 				assert.Equal(t, "ReceivedMessage", msg.EventDef.Name)
 				payload := msg.Payload.(messageEvent)
-				assert.Equal(t, test.expectedThread, payload.Thread)
+				assert.Equal(t, test.expectedThreadTimestamp, payload.ThreadTimestamp)
 			default:
 				assert.Fail(t, "expected message event")
 			}
