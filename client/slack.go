@@ -21,14 +21,14 @@ import (
 	"fmt"
 	"github.com/HotelsDotCom/flyte-client/flyte"
 	"github.com/HotelsDotCom/go-logger"
-	s "github.com/nlopes/slack"
+	"github.com/slack-go/slack"
 )
 
 type client interface {
-	GetUserInfo(userId string) (*s.User, error)
-	NewOutgoingMessage(message, channelId string, options ...s.RTMsgOption) *s.OutgoingMessage
-	SendMessage(message *s.OutgoingMessage)
-	PostMessage(channel, text string, params s.PostMessageParameters) (string, string, error)
+	GetUserInfo(userId string) (*slack.User, error)
+	NewOutgoingMessage(message, channelId string, options ...slack.RTMsgOption) *slack.OutgoingMessage
+	SendMessage(message *slack.OutgoingMessage)
+	PostMessage(channel string, opts ...slack.MsgOption) (string, string, error)
 }
 
 // our slack implementation makes consistent use of channel id
@@ -38,20 +38,20 @@ type Slack interface {
 	IncomingMessages() <-chan flyte.Event
 }
 
-type slack struct {
+type slackClient struct {
 	client client
 	// events received from slack
-	incomingEvents chan s.RTMEvent
+	incomingEvents chan slack.RTMEvent
 	// messages to be consumed by API (filtered incoming events)
 	incomingMessages chan flyte.Event
 }
 
 func NewSlack(token string) Slack {
 
-	rtm := s.New(token).NewRTM()
+	rtm := slack.New(token).NewRTM()
 	go rtm.ManageConnection()
 
-	sl := &slack{
+	sl := &slackClient{
 		client:           rtm,
 		incomingEvents:   rtm.IncomingEvents,
 		incomingMessages: make(chan flyte.Event),
@@ -63,7 +63,7 @@ func NewSlack(token string) Slack {
 }
 
 // Sends slack message to provided channel. Channel does not have to be joined.
-func (sl *slack) SendMessage(message, channelId, threadTimestamp string) {
+func (sl *slackClient) SendMessage(message, channelId, threadTimestamp string) {
 
 	msg := sl.client.NewOutgoingMessage(message, channelId)
 	msg.ThreadTimestamp = threadTimestamp
@@ -72,7 +72,7 @@ func (sl *slack) SendMessage(message, channelId, threadTimestamp string) {
 
 }
 
-func (sl *slack) SendRichMessage(rm RichMessage) error {
+func (sl *slackClient) SendRichMessage(rm RichMessage) error {
 	if err := rm.Post(sl.client); err != nil {
 		return errors.New(fmt.Sprintf("cannot send rich message=%v: %v", rm, err))
 	}
@@ -81,14 +81,14 @@ func (sl *slack) SendRichMessage(rm RichMessage) error {
 }
 
 // Returns channel with incoming messages from all joined channels.
-func (sl *slack) IncomingMessages() <-chan flyte.Event {
+func (sl *slackClient) IncomingMessages() <-chan flyte.Event {
 	return sl.incomingMessages
 }
 
-func (sl *slack) handleMessageEvents() {
+func (sl *slackClient) handleMessageEvents() {
 	for event := range sl.incomingEvents {
 		switch v := event.Data.(type) {
-		case *s.MessageEvent:
+		case *slack.MessageEvent:
 			logger.Debugf("received message=%s in channel=%s", v.Text, v.Channel)
 			u, err := sl.client.GetUserInfo(v.User)
 			if err != nil {
@@ -100,7 +100,7 @@ func (sl *slack) handleMessageEvents() {
 	}
 }
 
-func toFlyteMessageEvent(event *s.MessageEvent, user *s.User) flyte.Event {
+func toFlyteMessageEvent(event *slack.MessageEvent, user *slack.User) flyte.Event {
 
 	return flyte.Event{
 		EventDef: flyte.EventDef{Name: "ReceivedMessage"},
@@ -116,7 +116,7 @@ type messageEvent struct {
 	ThreadTimestamp string `json:"threadTimestamp"`
 }
 
-func newMessageEvent(e *s.MessageEvent, u *s.User) messageEvent {
+func newMessageEvent(e *slack.MessageEvent, u *slack.User) messageEvent {
 	return messageEvent{
 		ChannelId:       e.Channel,
 		User:            newUser(u),
@@ -135,7 +135,7 @@ type user struct {
 	LastName  string `json:"lastName"`
 }
 
-func newUser(u *s.User) user {
+func newUser(u *slack.User) user {
 
 	return user{
 		Id:        u.ID,

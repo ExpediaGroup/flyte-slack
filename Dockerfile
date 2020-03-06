@@ -1,5 +1,5 @@
 # Build image
-FROM golang:1.12 AS build-env
+FROM golang:1.13.4 AS build-env
 
 WORKDIR /app
 ENV GO111MODULE=on
@@ -10,7 +10,7 @@ RUN go test ./...
 RUN go build
 
 # Run image
-FROM alpine:3.10
+FROM alpine:3.10.2
 COPY --from=build-env /app/flyte-slack .
 
 ENTRYPOINT ["./flyte-slack"]

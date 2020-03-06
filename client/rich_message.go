@@ -16,41 +16,48 @@ limitations under the License.
 
 package client
 
-import s "github.com/nlopes/slack"
+import "github.com/slack-go/slack"
 
 type RichMessage struct {
-	Parse           string         `json:"parse"`
-	ThreadTimestamp string         `json:"thread_ts"`
-	ReplyBroadcast  bool           `json:"reply_broadcast"`
-	LinkNames       int            `json:"link_names"`
-	Attachments     []s.Attachment `json:"attachments"`
-	UnfurlLinks     bool           `json:"unfurl_links"`
-	UnfurlMedia     bool           `json:"unfurl_media"`
-	IconURL         string         `json:"icon_url"`
-	IconEmoji       string         `json:"icon_emoji"`
-	Markdown        bool           `json:"mrkdwn,omitempty"`
-	EscapeText      bool           `json:"escape_text"`
-	ChannelID       string         `json:"channel"`
-	Text            string         `json:"text"`
+	Parse           string             `json:"parse"`
+	ThreadTimestamp string             `json:"thread_ts"`
+	ReplyBroadcast  bool               `json:"reply_broadcast"`
+	LinkNames       int                `json:"link_names"`
+	Attachments     []slack.Attachment `json:"attachments"`
+	UnfurlLinks     bool               `json:"unfurl_links"`
+	UnfurlMedia     bool               `json:"unfurl_media"`
+	IconURL         string             `json:"icon_url"`
+	IconEmoji       string             `json:"icon_emoji"`
+	Markdown        bool               `json:"mrkdwn,omitempty"`
+	EscapeText      bool               `json:"escape_text"`
+	ChannelID       string             `json:"channel"`
+	Text            string             `json:"text"`
 }
 
 type MessagePoster interface {
-	PostMessage(channel, text string, params s.PostMessageParameters) (string, string, error)
+	PostMessage(channel string, params ...slack.MsgOption) (string, string, error)
 }
 
 func (m RichMessage) Post(rtm MessagePoster) error {
-	_, _, err := rtm.PostMessage(m.ChannelID, m.Text, m.toPostMessageParameters())
+	_, _, err := rtm.PostMessage(m.ChannelID, m.toMsgOptions()...)
 	return err
 }
 
-func (m RichMessage) toPostMessageParameters() s.PostMessageParameters {
-	return s.PostMessageParameters{
+func (m RichMessage) toMsgOptions() []slack.MsgOption {
+	return []slack.MsgOption{
+		slack.MsgOptionText(m.Text, m.EscapeText),
+		slack.MsgOptionPostMessageParameters(m.toPostMessageParameters()),
+		slack.MsgOptionAttachments(m.Attachments...),
+	}
+}
+
+func (m RichMessage) toPostMessageParameters() slack.PostMessageParameters {
+	return slack.PostMessageParameters{
 		AsUser:          true,
 		Parse:           m.Parse,
 		ThreadTimestamp: m.ThreadTimestamp,
 		ReplyBroadcast:  m.ReplyBroadcast,
 		LinkNames:       m.LinkNames,
-		Attachments:     m.Attachments,
 		UnfurlLinks:     m.UnfurlLinks,
 		UnfurlMedia:     m.UnfurlMedia,
 		IconURL:         m.IconURL,
