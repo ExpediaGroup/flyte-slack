@@ -126,7 +126,7 @@ func newMessageEvent(e *slack.MessageEvent, u *slack.User) messageEvent {
 	}
 }
 
-func getThreadTimestamp(e *s.MessageEvent) string {
+func getThreadTimestamp(e *slack.MessageEvent) string {
 	if e.ThreadTimestamp != "" {
 		return e.ThreadTimestamp
 	}
