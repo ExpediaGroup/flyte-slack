@@ -20,7 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/HotelsDotCom/go-logger/loggertest"
-	s "github.com/nlopes/slack"
+	"github.com/slack-go/slack"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"strings"
@@ -36,7 +36,7 @@ func Before(t *testing.T) {
 	loggertest.Init("DEBUG")
 	SlackImpl = NewSlack("token")
 	SlackMockClient = NewMockClient(t)
-	SlackImpl.(*slack).client = SlackMockClient
+	SlackImpl.(*slackClient).client = SlackMockClient
 }
 
 func After() {
@@ -59,12 +59,9 @@ func TestSendRichMessage(t *testing.T) {
 	Before(t)
 	defer After()
 
-	var pmp s.PostMessageParameters
-	var ch, txt string
-	SlackMockClient.PostMessageFunc = func(channel, text string, params s.PostMessageParameters) (string, string, error) {
+	var ch string
+	SlackMockClient.PostMessageFunc = func(channel string, opts ...slack.MsgOption) (string, string, error) {
 		ch = channel
-		txt = text
-		pmp = params
 		return "", "", nil
 	}
 
@@ -73,7 +70,7 @@ func TestSendRichMessage(t *testing.T) {
 		ThreadTimestamp: "now",
 		ReplyBroadcast:  true,
 		LinkNames:       3,
-		Attachments:     []s.Attachment{},
+		Attachments:     []slack.Attachment{},
 		UnfurlLinks:     true,
 		UnfurlMedia:     true,
 		IconURL:         "somewhere",
@@ -84,51 +81,18 @@ func TestSendRichMessage(t *testing.T) {
 		Text:            "hello?",
 	}
 
-	SlackImpl.SendRichMessage(rm)
+	err := SlackImpl.SendRichMessage(rm)
+	require.NoError(t, err)
 
 	// args
 	assert.Equal(t, "channel id", ch)
-	assert.Equal(t, "hello?", txt)
-
-	// PostMessageParameters values
-	assert.True(t, pmp.AsUser)
-	assert.Equal(t, "pass?", pmp.Parse)
-	assert.Equal(t, "now", pmp.ThreadTimestamp)
-	assert.True(t, pmp.ReplyBroadcast)
-	assert.Equal(t, 3, pmp.LinkNames)
-	assert.Equal(t, []s.Attachment{}, pmp.Attachments)
-	assert.True(t, pmp.UnfurlLinks)
-	assert.True(t, pmp.UnfurlMedia)
-	assert.Equal(t, "somewhere", pmp.IconURL)
-	assert.Equal(t, "over the rainbow", pmp.IconEmoji)
-	assert.True(t, pmp.Markdown)
-	assert.True(t, pmp.EscapeText)
-}
-
-func TestSendRichMessageShouldLogOnSuccess(t *testing.T) {
-	Before(t)
-	defer After()
-
-	loggertest.ClearLogMessages()
-
-	SlackMockClient.PostMessageFunc = func(channel, text string, params s.PostMessageParameters) (string, string, error) {
-		return "", "", nil
-	}
-
-	rm := RichMessage{ChannelID: "channel id", Text: "hello?", ThreadTimestamp: "now"}
-	SlackImpl.SendRichMessage(rm)
-
-	msgs := loggertest.GetLogMessages()
-	require.Equal(t, 1, len(msgs))
-	assert.Equal(t, loggertest.LogLevelInfo, msgs[0].Level)
-	assert.True(t, strings.HasPrefix(msgs[0].Message, "rich message="), "expected message to start with \"rich message=\", actual: %q", msgs[0].Message)
 }
 
 func TestSendRichMessageShouldReturnErrorOnFailure(t *testing.T) {
 	Before(t)
 	defer After()
 
-	SlackMockClient.PostMessageFunc = func(channel, text string, params s.PostMessageParameters) (string, string, error) {
+	SlackMockClient.PostMessageFunc = func(channel string, opts ...slack.MsgOption) (string, string, error) {
 		return "", "", errors.New("barf")
 	}
 
@@ -145,12 +109,12 @@ func TestIncomingMessages(t *testing.T) {
 
 	Before(t)
 	defer After()
-	c1 := &s.Channel{}
+	c1 := &slack.Channel{}
 	c1.Name = "name-abc"
-	u := &s.User{
+	u := &slack.User{
 		ID:   "user-id-123",
 		Name: "kfoox",
-		Profile: s.UserProfile{
+		Profile: slack.UserProfile{
 			Title:     "boss",
 			Email:     "k@example.com",
 			FirstName: "Karl",
@@ -225,12 +189,12 @@ func TestIncomingMessagesLogging(t *testing.T) {
 	Before(t)
 	defer After()
 	loggertest.ClearLogMessages()
-	c1 := &s.Channel{}
+	c1 := &slack.Channel{}
 	c1.Name = "name-abc"
-	u := &s.User{
+	u := &slack.User{
 		ID:   "user-id-123",
 		Name: "kfoox",
-		Profile: s.UserProfile{
+		Profile: slack.UserProfile{
 			Title:     "boss",
 			Email:     "k@example.com",
 			FirstName: "Karl",
@@ -256,15 +220,15 @@ func TestIncomingMessagesLogging(t *testing.T) {
 // this simulates messages coming from slack
 func sendSlackMessage(slackImpl Slack, text, channel, userId, timestamp, threadTimestamp string) {
 
-	data := &s.MessageEvent{}
+	data := &slack.MessageEvent{}
 	data.Text = text
 	data.Channel = channel
 	data.User = userId
 	data.Timestamp = timestamp
 	data.ThreadTimestamp = threadTimestamp
-	messageEvent := s.RTMEvent{Type: "message", Data: data}
+	messageEvent := slack.RTMEvent{Type: "message", Data: data}
 
-	slackImpl.(*slack).incomingEvents <- messageEvent
+	slackImpl.(*slackClient).incomingEvents <- messageEvent
 }
 
 // --- mock client ---
@@ -272,19 +236,19 @@ func sendSlackMessage(slackImpl Slack, text, channel, userId, timestamp, threadT
 type MockClient struct {
 	t *testing.T
 	// Slice of mocked get user info functions (call to GetUserInfo will pop from slice)
-	GetUserInfoFns []func(userId string) (*s.User, error)
+	GetUserInfoFns []func(userId string) (*slack.User, error)
 	// map stores all the sent messages by channelId (key is channelId)
-	OutgoingMessages map[string][]*s.OutgoingMessage
+	OutgoingMessages map[string][]*slack.OutgoingMessage
 	// Slice of rich messages
-	PostMessageFunc func(channel, text string, params s.PostMessageParameters) (string, string, error)
+	PostMessageFunc func(channel string, opts ...slack.MsgOption) (string, string, error)
 }
 
 func NewMockClient(t *testing.T) *MockClient {
 
 	m := &MockClient{t: t}
-	m.GetUserInfoFns = []func(userId string) (*s.User, error){}
-	m.OutgoingMessages = make(map[string][]*s.OutgoingMessage)
-	m.PostMessageFunc = func(channel, text string, params s.PostMessageParameters) (string, string, error) {
+	m.GetUserInfoFns = []func(userId string) (*slack.User, error){}
+	m.OutgoingMessages = make(map[string][]*slack.OutgoingMessage)
+	m.PostMessageFunc = func(channel string, params ...slack.MsgOption) (string, string, error) {
 		return "", "", nil
 	}
 	return m
@@ -292,9 +256,9 @@ func NewMockClient(t *testing.T) *MockClient {
 
 // --- config methods ---
 
-func (m *MockClient) AddMockGetUserInfoCall(expectedUserId string, returnUser *s.User, returnError error) {
+func (m *MockClient) AddMockGetUserInfoCall(expectedUserId string, returnUser *slack.User, returnError error) {
 
-	x := func(userId string) (*s.User, error) {
+	x := func(userId string) (*slack.User, error) {
 		errMessage := fmt.Sprintf("GetUserInfo call expected %s userId got %s", expectedUserId, userId)
 		require.Equal(m.t, expectedUserId, userId, errMessage)
 		return returnUser, returnError
@@ -304,18 +268,18 @@ func (m *MockClient) AddMockGetUserInfoCall(expectedUserId string, returnUser *s
 
 // --- implementation ---
 
-func (m *MockClient) GetUserInfo(userId string) (*s.User, error) {
+func (m *MockClient) GetUserInfo(userId string) (*slack.User, error) {
 
 	require.NotEmpty(m.t, m.GetUserInfoFns, "Unexpected (not mocked) call to get user info")
 
-	var fn func(string) (*s.User, error)
+	var fn func(string) (*slack.User, error)
 	fn, m.GetUserInfoFns = m.GetUserInfoFns[0], m.GetUserInfoFns[1:]
 	return fn(userId)
 }
 
-func (m *MockClient) NewOutgoingMessage(message, channelId string, options ...s.RTMsgOption) *s.OutgoingMessage {
+func (m *MockClient) NewOutgoingMessage(message, channelId string, options ...slack.RTMsgOption) *slack.OutgoingMessage {
 
-	return &s.OutgoingMessage{
+	return &slack.OutgoingMessage{
 		ID:      666,
 		Type:    "message",
 		Channel: channelId,
@@ -323,24 +287,10 @@ func (m *MockClient) NewOutgoingMessage(message, channelId string, options ...s.
 	}
 }
 
-func (m *MockClient) SendMessage(message *s.OutgoingMessage) {
+func (m *MockClient) SendMessage(message *slack.OutgoingMessage) {
 	m.OutgoingMessages[message.Channel] = append(m.OutgoingMessages[message.Channel], message)
 }
 
-func (m *MockClient) PostMessage(channel, text string, params s.PostMessageParameters) (string, string, error) {
-	return m.PostMessageFunc(channel, text, params)
-}
-
-// --- backup helper ---
-
-type inMemoryBackup struct {
-	channelIds []string
-}
-
-func (i *inMemoryBackup) Backup(channelIds []string) {
-	i.channelIds = channelIds
-}
-
-func (i *inMemoryBackup) Load() []string {
-	return i.channelIds
+func (m *MockClient) PostMessage(channel string, opts ...slack.MsgOption) (string, string, error) {
+	return m.PostMessageFunc(channel, opts...)
 }
