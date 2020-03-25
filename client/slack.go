@@ -34,7 +34,7 @@ type client interface {
 // our slack implementation makes consistent use of channel id
 type Slack interface {
 	SendMessage(message, channelId, threadTimestamp string)
-	SendRichMessage(rm RichMessage) error
+	SendRichMessage(rm RichMessage) (respChannel string, respTimestamp string, err error)
 	IncomingMessages() <-chan flyte.Event
 }
 
@@ -72,12 +72,13 @@ func (sl *slackClient) SendMessage(message, channelId, threadTimestamp string) {
 
 }
 
-func (sl *slackClient) SendRichMessage(rm RichMessage) error {
-	if err := rm.Post(sl.client); err != nil {
-		return errors.New(fmt.Sprintf("cannot send rich message=%v: %v", rm, err))
+func (sl *slackClient) SendRichMessage(rm RichMessage) (string, string, error) {
+	respChannel, respTimestamp, err := rm.Post(sl.client)
+	if err != nil {
+		return "", "", errors.New(fmt.Sprintf("cannot send rich message=%v: %v", rm, err))
 	}
 	logger.Infof("rich message=%+v sent to channel=%s", rm, rm.ChannelID)
-	return nil
+	return respChannel, respTimestamp, nil
 }
 
 // Returns channel with incoming messages from all joined channels.

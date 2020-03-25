@@ -35,7 +35,7 @@ type SendRichMessageErrorOutput struct {
 }
 
 type RichMessageSender interface {
-	SendRichMessage(rm client.RichMessage) error
+	SendRichMessage(rm client.RichMessage) (respChannel string, respTimestamp string, err error)
 }
 
 func SendRichMessage(sender RichMessageSender) flyte.Command {
@@ -55,7 +55,8 @@ func sendRichMessageHandler(sender RichMessageSender) flyte.CommandHandler {
 			return flyte.NewFatalEvent(errorMessage)
 		}
 
-		if err := sender.SendRichMessage(input); err != nil {
+		respChannel, respTimestamp, err := sender.SendRichMessage(input)
+		if err != nil {
 			logger.Errorf("error sending rich message: %v", err)
 			return flyte.Event{
 				EventDef: sendRichMessageFailedEventDef,
@@ -68,7 +69,10 @@ func sendRichMessageHandler(sender RichMessageSender) flyte.CommandHandler {
 
 		return flyte.Event{
 			EventDef: richMessageSentEventDef,
-			Payload:  input,
+			Payload: map[string]string{
+				"channelId":       respChannel,
+				"threadTimestamp": respTimestamp,
+			},
 		}
 	}
 }

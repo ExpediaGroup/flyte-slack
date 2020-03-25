@@ -81,7 +81,7 @@ func TestSendRichMessage(t *testing.T) {
 		Text:            "hello?",
 	}
 
-	err := SlackImpl.SendRichMessage(rm)
+	_, _, err := SlackImpl.SendRichMessage(rm)
 	require.NoError(t, err)
 
 	// args
@@ -97,7 +97,7 @@ func TestSendRichMessageShouldReturnErrorOnFailure(t *testing.T) {
 	}
 
 	rm := RichMessage{ChannelID: "channel id", Text: "hello?", ThreadTimestamp: "now"}
-	err := SlackImpl.SendRichMessage(rm)
+	_, _, err := SlackImpl.SendRichMessage(rm)
 
 	require.NotNil(t, err)
 	errMsg := err.Error()
