@@ -122,8 +122,15 @@ func newMessageEvent(e *slack.MessageEvent, u *slack.User) messageEvent {
 		User:            newUser(u),
 		Message:         e.Text,
 		Timestamp:       e.Timestamp,
-		ThreadTimestamp: e.ThreadTimestamp,
+		ThreadTimestamp: getThreadTimestamp(e),
 	}
+}
+
+func getThreadTimestamp(e *slack.MessageEvent) string {
+	if e.ThreadTimestamp != "" {
+		return e.ThreadTimestamp
+	}
+	return e.Timestamp
 }
 
 type user struct {

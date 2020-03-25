@@ -141,9 +141,45 @@ func TestIncomingMessages(t *testing.T) {
 		assert.Equal(t, "Foox", payload.User.LastName)
 		assert.Equal(t, "now", payload.Timestamp)
 		assert.Equal(t, "thread", payload.ThreadTimestamp)
-
 	default:
 		assert.Fail(t, "expected message event")
+	}
+	// Test whether Thread is properly populated or not
+	tests := []struct {
+		name                    string
+		inputTimestamp          string
+		inputThreadTimestamp    string
+		expectedThreadTimestamp string
+	}{
+		{
+			name:                    "both Timestamp and ThreadTimestamp are defined",
+			inputTimestamp:          "ts",
+			inputThreadTimestamp:    "tts",
+			expectedThreadTimestamp: "tts",
+		},
+		{
+			name:                    "ThreadTimestamp is defined only",
+			inputTimestamp:          "ts",
+			inputThreadTimestamp:    "",
+			expectedThreadTimestamp: "ts",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			SlackMockClient.AddMockGetUserInfoCall("user-id-123", u, nil)
+			sendSlackMessage(SlackImpl, "hello there ...", "id-abc", "user-id-123", test.inputTimestamp, test.inputThreadTimestamp)
+			time.Sleep(50 * time.Millisecond)
+
+			select {
+			case msg := <-incomingMessages:
+				assert.Equal(t, "ReceivedMessage", msg.EventDef.Name)
+				payload := msg.Payload.(messageEvent)
+				assert.Equal(t, test.expectedThreadTimestamp, payload.ThreadTimestamp)
+			default:
+				assert.Fail(t, "expected message event")
+			}
+		})
 	}
 }
 
