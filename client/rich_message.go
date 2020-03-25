@@ -38,9 +38,8 @@ type MessagePoster interface {
 	PostMessage(channel string, params ...slack.MsgOption) (string, string, error)
 }
 
-func (m RichMessage) Post(rtm MessagePoster) error {
-	_, _, err := rtm.PostMessage(m.ChannelID, m.toMsgOptions()...)
-	return err
+func (m RichMessage) Post(rtm MessagePoster) (respChannel string, respTimestamp string, err error) {
+	return rtm.PostMessage(m.ChannelID, m.toMsgOptions()...)
 }
 
 func (m RichMessage) toMsgOptions() []slack.MsgOption {

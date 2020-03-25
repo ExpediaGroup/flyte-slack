@@ -23,7 +23,7 @@ import (
 
 type MockSlack struct {
 	SendMessageCalls    map[string][]string
-	SendRichMessageFunc func(rm client.RichMessage) error
+	SendRichMessageFunc func(rm client.RichMessage) (string, string, error)
 }
 
 func NewMockSlack() *MockSlack {
@@ -37,7 +37,7 @@ func (m *MockSlack) SendMessage(message, channelId, _ string) {
 	m.SendMessageCalls[channelId] = append(m.SendMessageCalls[channelId], message)
 }
 
-func (m *MockSlack) SendRichMessage(rm client.RichMessage) error {
+func (m *MockSlack) SendRichMessage(rm client.RichMessage) (string, string, error) {
 	return m.SendRichMessageFunc(rm)
 }
 

@@ -41,7 +41,7 @@ type DummySlack struct{}
 
 func (DummySlack) SendMessage(message, channelId, threadTimestamp string) {}
 
-func (DummySlack) SendRichMessage(client.RichMessage) error { return nil }
+func (DummySlack) SendRichMessage(client.RichMessage) (string, string, error) { return "", "", nil }
 
 func (DummySlack) IncomingMessages() <-chan flyte.Event {
 	return make(chan flyte.Event)

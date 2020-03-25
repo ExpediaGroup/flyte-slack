@@ -63,8 +63,8 @@ func TestPostMessageShouldLogErrorWhenCalledWithInvalidJSON(t *testing.T) {
 
 func TestSendRichMessageHandlerShouldReturnErrorEventWhenRichMessageSenderReturnsError(t *testing.T) {
 	mp := mockRichMessageSender{
-		sendRichMessage: func(rm client.RichMessage) error {
-			return errors.New("oh dear")
+		sendRichMessage: func(rm client.RichMessage) (string, string, error) {
+			return "", "", errors.New("oh dear")
 		},
 	}
 
@@ -83,8 +83,8 @@ func TestSendRichMessageHandlerShouldLogErrorWhenRichMessageSenderReturnsError(t
 	loggertest.ClearLogMessages()
 
 	mp := mockRichMessageSender{
-		sendRichMessage: func(rm client.RichMessage) error {
-			return errors.New("oh dear")
+		sendRichMessage: func(rm client.RichMessage) (string, string, error) {
+			return "","", errors.New("oh dear")
 		},
 	}
 
@@ -103,9 +103,9 @@ func TestSendRichMessageHandlerShouldLogErrorWhenRichMessageSenderReturnsError(t
 func TestPostMessageCallsMessagePoster(t *testing.T) {
 	var sentMessage client.RichMessage
 	mp := mockRichMessageSender{
-		sendRichMessage: func(rm client.RichMessage) error {
+		sendRichMessage: func(rm client.RichMessage) (string, string, error) {
 			sentMessage = rm
-			return nil
+			return "", "",nil
 		},
 	}
 
@@ -120,32 +120,33 @@ func TestPostMessageCallsMessagePoster(t *testing.T) {
 }
 
 func TestPostMessageReturnsEventWithInputMessageAsPayload(t *testing.T) {
-	command := SendRichMessage(mockRichMessageSender{})
+	mp := mockRichMessageSender{
+		sendRichMessage: func(rm client.RichMessage) (string, string, error) {
+			return "AB45787HU", "1234.5678",nil
+		},
+	}
+	command := SendRichMessage(mp)
 
 	event := command.Handler(testRichMessage())
-	im := event.Payload.(client.RichMessage)
+	im := event.Payload.(map[string]string)
 
 	assert.Equal(t, richMessageSentEventDef, event.EventDef)
 
-	assert.Equal(t, "timestamp", im.ThreadTimestamp)
-	assert.Equal(t, "color", im.Attachments[0].Color)
-	assert.True(t, im.Attachments[0].Fields[0].Short)
+	assert.Equal(t, "1234.5678", im["threadTimestamp"])
+	assert.Equal(t, "AB45787HU", im["channelId"])
 }
 
 func TestWiring(t *testing.T) {
 	slack := NewMockSlack()
-	slack.SendRichMessageFunc = func(rm client.RichMessage) error {
-		return nil
+	slack.SendRichMessageFunc = func(rm client.RichMessage) (string, string, error) {
+		return "", "", nil
 	}
 
 	command := SendRichMessage(slack)
 
 	event := command.Handler(testRichMessage())
-	im := event.Payload.(client.RichMessage)
 
 	assert.Equal(t, richMessageSentEventDef, event.EventDef)
-	assert.Equal(t, "text", im.Attachments[0].Text)
-	assert.Equal(t, "action style", im.Attachments[0].Actions[0].Style)
 }
 
 func testRichMessage() []byte {
@@ -185,12 +186,12 @@ func testRichMessageStruct() client.RichMessage {
 }
 
 type mockRichMessageSender struct {
-	sendRichMessage func(rm client.RichMessage) error
+	sendRichMessage func(rm client.RichMessage) (string, string, error)
 }
 
-func (m mockRichMessageSender) SendRichMessage(rm client.RichMessage) error {
+func (m mockRichMessageSender) SendRichMessage(rm client.RichMessage) (string, string, error) {
 	if m.sendRichMessage != nil {
 		return m.sendRichMessage(rm)
 	}
-	return nil
+	return "", "", nil
 }
