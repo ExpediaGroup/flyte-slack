@@ -16,12 +16,14 @@ Pack requires go version min. 1.11
 
 ## Configuration
 
+>_This plugin only works with classic Slack apps at the moment. To learn how to create one, click [here](docs/classic-apps.md)._
+
 The plugin is configured using environment variables:
 
 ENV VAR                          | Default  |  Description                               | Example               
  ------------------------------- |  ------- |  ----------------------------------------- |  ---------------------
 FLYTE_API                        | -        | The API endpoint to use                    | http://localhost:8080
-FLYTE_SLACK_TOKEN                | -        | The API token to use                       | token_abc
+FLYTE_SLACK_TOKEN                | -        | The Slack Bot API token to use             | token_abc
 
 Example `FLYTE_API=http://localhost:8080 FLYTE_SLACK_TOKEN=token_abc ./flyte-slack`
 
