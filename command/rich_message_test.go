@@ -19,8 +19,8 @@ package command
 import (
 	"encoding/json"
 	"errors"
+	"github.com/ExpediaGroup/flyte-slack/client"
 	"github.com/HotelsDotCom/flyte-client/flyte"
-	"github.com/HotelsDotCom/flyte-slack/client"
 	"github.com/HotelsDotCom/go-logger/loggertest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -84,7 +84,7 @@ func TestSendRichMessageHandlerShouldLogErrorWhenRichMessageSenderReturnsError(t
 
 	mp := mockRichMessageSender{
 		sendRichMessage: func(rm client.RichMessage) (string, string, error) {
-			return "","", errors.New("oh dear")
+			return "", "", errors.New("oh dear")
 		},
 	}
 
@@ -105,7 +105,7 @@ func TestPostMessageCallsMessagePoster(t *testing.T) {
 	mp := mockRichMessageSender{
 		sendRichMessage: func(rm client.RichMessage) (string, string, error) {
 			sentMessage = rm
-			return "", "",nil
+			return "", "", nil
 		},
 	}
 
@@ -122,7 +122,7 @@ func TestPostMessageCallsMessagePoster(t *testing.T) {
 func TestPostMessageReturnsEventWithInputMessageAsPayload(t *testing.T) {
 	mp := mockRichMessageSender{
 		sendRichMessage: func(rm client.RichMessage) (string, string, error) {
-			return "AB45787HU", "1234.5678",nil
+			return "AB45787HU", "1234.5678", nil
 		},
 	}
 	command := SendRichMessage(mp)

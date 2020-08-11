@@ -17,8 +17,8 @@ limitations under the License.
 package main
 
 import (
+	"github.com/ExpediaGroup/flyte-slack/client"
 	"github.com/HotelsDotCom/flyte-client/flyte"
-	"github.com/HotelsDotCom/flyte-slack/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -29,7 +29,7 @@ func TestPackDefinitionIsPopulated(t *testing.T) {
 	packDef := GetPackDef(DummySlack{})
 
 	assert.Equal(t, "Slack", packDef.Name)
-	assert.Equal(t, "https://github.com/HotelsDotCom/flyte-slack/blob/master/README.md", packDef.HelpURL.String())
+	assert.Equal(t, "https://github.com/ExpediaGroup/flyte-slack/blob/master/README.md", packDef.HelpURL.String())
 	require.Equal(t, 0, len(packDef.Labels))
 	require.Equal(t, 2, len(packDef.Commands))
 	require.Equal(t, 1, len(packDef.EventDefs))
