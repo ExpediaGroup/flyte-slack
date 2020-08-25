@@ -17,16 +17,16 @@ limitations under the License.
 package main
 
 import (
+	"github.com/ExpediaGroup/flyte-slack/client"
+	"github.com/ExpediaGroup/flyte-slack/command"
 	api "github.com/HotelsDotCom/flyte-client/client"
 	"github.com/HotelsDotCom/flyte-client/flyte"
-	"github.com/HotelsDotCom/flyte-slack/client"
-	"github.com/HotelsDotCom/flyte-slack/command"
 	"github.com/HotelsDotCom/go-logger"
 	"net/url"
 	"time"
 )
 
-const packDefHelpUrl = "https://github.com/HotelsDotCom/flyte-slack/blob/master/README.md"
+const packDefHelpUrl = "https://github.com/ExpediaGroup/flyte-slack/blob/master/README.md"
 const defaultPackName = "Slack"
 
 func main() {

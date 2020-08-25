@@ -23,9 +23,9 @@ import (
 )
 
 const (
-	apiEnvKey            = "FLYTE_API"
-	tokenEnvKey          = "FLYTE_SLACK_TOKEN"
-	packNameKey          = "PACK_NAME"
+	apiEnvKey   = "FLYTE_API"
+	tokenEnvKey = "FLYTE_SLACK_TOKEN"
+	packNameKey = "PACK_NAME"
 )
 
 // extracted to variable for testing

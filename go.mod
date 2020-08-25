@@ -1,6 +1,6 @@
-module github.com/HotelsDotCom/flyte-slack
+module github.com/ExpediaGroup/flyte-slack
 
-go 1.13
+go 1.14
 
 require (
 	github.com/HotelsDotCom/flyte-client v0.0.0-20191018093418-d4ecefe9ad35
