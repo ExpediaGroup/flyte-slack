@@ -149,8 +149,8 @@ func TestIncomingMessages(t *testing.T) {
 		assert.Equal(t, "now", payload.Timestamp)
 		assert.Equal(t, "thread", payload.ThreadTimestamp)
 		assert.Equal(t, 2, payload.ReplyCount)
-		assert.Equal(t, "123", payload.ReplyUsers[0].Timestamp)
-		assert.Equal(t, "Karl", payload.ReplyUsers[0].User)
+		assert.Equal(t, "123", payload.Replies[0].Timestamp)
+		assert.Equal(t, "Karl", payload.Replies[0].User)
 	default:
 		assert.Fail(t, "expected message event")
 	}

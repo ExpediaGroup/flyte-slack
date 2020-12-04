@@ -116,7 +116,7 @@ type messageEvent struct {
 	Timestamp       string        `json:"timestamp"`
 	ThreadTimestamp string        `json:"threadTimestamp"`
 	ReplyCount      int           `json:"replyCount"`
-	ReplyUsers      []slack.Reply `json:"replyUsers"`
+	Replies         []slack.Reply `json:"replies"`
 }
 
 func newMessageEvent(e *slack.MessageEvent, u *slack.User) messageEvent {
@@ -127,7 +127,7 @@ func newMessageEvent(e *slack.MessageEvent, u *slack.User) messageEvent {
 		Timestamp:       e.Timestamp,
 		ThreadTimestamp: getThreadTimestamp(e),
 		ReplyCount:      e.ReplyCount,
-		ReplyUsers:      e.Replies,
+		Replies:         e.Replies,
 	}
 }
 
