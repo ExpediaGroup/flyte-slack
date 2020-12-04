@@ -110,11 +110,13 @@ func toFlyteMessageEvent(event *slack.MessageEvent, user *slack.User) flyte.Even
 }
 
 type messageEvent struct {
-	ChannelId       string `json:"channelId"`
-	User            user   `json:"user"`
-	Message         string `json:"message"`
-	Timestamp       string `json:"timestamp"`
-	ThreadTimestamp string `json:"threadTimestamp"`
+	ChannelId       string        `json:"channelId"`
+	User            user          `json:"user"`
+	Message         string        `json:"message"`
+	Timestamp       string        `json:"timestamp"`
+	ThreadTimestamp string        `json:"threadTimestamp"`
+	ReplyCount      int           `json:"replyCount"`
+	ReplyUsers      []slack.Reply `json:"replyUsers"`
 }
 
 func newMessageEvent(e *slack.MessageEvent, u *slack.User) messageEvent {
@@ -124,6 +126,8 @@ func newMessageEvent(e *slack.MessageEvent, u *slack.User) messageEvent {
 		Message:         e.Text,
 		Timestamp:       e.Timestamp,
 		ThreadTimestamp: getThreadTimestamp(e),
+		ReplyCount:      e.ReplyCount,
+		ReplyUsers:      e.Replies,
 	}
 }
 

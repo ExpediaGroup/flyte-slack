@@ -121,10 +121,17 @@ func TestIncomingMessages(t *testing.T) {
 			LastName:  "Foox",
 		},
 	}
+	slackReplies := []slack.Reply{
+		{
+			Timestamp: "123",
+			User:      "Karl",
+		},
+	}
+
 	SlackMockClient.AddMockGetUserInfoCall("user-id-123", u, nil)
 
 	incomingMessages := SlackImpl.IncomingMessages()
-	sendSlackMessage(SlackImpl, "hello there ...", "id-abc", "user-id-123", "now", "thread")
+	sendSlackMessage(SlackImpl, "hello there ...", "id-abc", "user-id-123", "now", "thread", 2, slackReplies)
 	time.Sleep(50 * time.Millisecond)
 
 	select {
@@ -141,6 +148,9 @@ func TestIncomingMessages(t *testing.T) {
 		assert.Equal(t, "Foox", payload.User.LastName)
 		assert.Equal(t, "now", payload.Timestamp)
 		assert.Equal(t, "thread", payload.ThreadTimestamp)
+		assert.Equal(t, 2, payload.ReplyCount)
+		assert.Equal(t, "123", payload.ReplyUsers[0].Timestamp)
+		assert.Equal(t, "Karl", payload.ReplyUsers[0].User)
 	default:
 		assert.Fail(t, "expected message event")
 	}
@@ -168,7 +178,7 @@ func TestIncomingMessages(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			SlackMockClient.AddMockGetUserInfoCall("user-id-123", u, nil)
-			sendSlackMessage(SlackImpl, "hello there ...", "id-abc", "user-id-123", test.inputTimestamp, test.inputThreadTimestamp)
+			sendSlackMessage(SlackImpl, "hello there ...", "id-abc", "user-id-123", test.inputTimestamp, test.inputThreadTimestamp, 2, slackReplies)
 			time.Sleep(50 * time.Millisecond)
 
 			select {
@@ -201,10 +211,17 @@ func TestIncomingMessagesLogging(t *testing.T) {
 			LastName:  "Foox",
 		},
 	}
+	slackReplies := []slack.Reply{
+		{
+			Timestamp: "123",
+			User:      "Karl",
+		},
+	}
+
 	SlackMockClient.AddMockGetUserInfoCall("user-id-123", u, nil)
 
 	// when
-	sendSlackMessage(SlackImpl, "hello there ...", "id-abc", "user-id-123", "", "")
+	sendSlackMessage(SlackImpl, "hello there ...", "id-abc", "user-id-123", "", "", 2, slackReplies)
 	time.Sleep(50 * time.Millisecond)
 
 	// then
@@ -218,7 +235,7 @@ func TestIncomingMessagesLogging(t *testing.T) {
 // --- helpers ---
 
 // this simulates messages coming from slack
-func sendSlackMessage(slackImpl Slack, text, channel, userId, timestamp, threadTimestamp string) {
+func sendSlackMessage(slackImpl Slack, text, channel, userId, timestamp, threadTimestamp string, replyCount int, replies []slack.Reply) {
 
 	data := &slack.MessageEvent{}
 	data.Text = text
@@ -226,6 +243,8 @@ func sendSlackMessage(slackImpl Slack, text, channel, userId, timestamp, threadT
 	data.User = userId
 	data.Timestamp = timestamp
 	data.ThreadTimestamp = threadTimestamp
+	data.ReplyCount = replyCount
+	data.Replies = replies
 	messageEvent := slack.RTMEvent{Type: "message", Data: data}
 
 	slackImpl.(*slackClient).incomingEvents <- messageEvent
