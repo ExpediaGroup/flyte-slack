@@ -237,14 +237,18 @@ func TestIncomingMessagesLogging(t *testing.T) {
 // this simulates messages coming from slack
 func sendSlackMessage(slackImpl Slack, text, channel, userId, timestamp, threadTimestamp string, replyCount int, replies []slack.Reply) {
 
-	data := &slack.MessageEvent{}
-	data.Text = text
-	data.Channel = channel
-	data.User = userId
-	data.Timestamp = timestamp
-	data.ThreadTimestamp = threadTimestamp
-	data.ReplyCount = replyCount
-	data.Replies = replies
+	data := &slack.MessageEvent{
+		Msg: slack.Msg{
+			Text:            text,
+			Channel:         channel,
+			User:            userId,
+			Timestamp:       timestamp,
+			ThreadTimestamp: threadTimestamp,
+			ReplyCount:      replyCount,
+			Replies:         replies,
+		},
+	}
+
 	messageEvent := slack.RTMEvent{Type: "message", Data: data}
 
 	slackImpl.(*slackClient).incomingEvents <- messageEvent
