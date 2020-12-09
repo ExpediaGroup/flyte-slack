@@ -55,6 +55,67 @@ func TestSendMessage(t *testing.T) {
 
 }
 
+func TestGetConversationReplies(t *testing.T) {
+
+	Before(t)
+	defer After()
+
+	// Mirror what is on https://api.slack.com/messaging/retrieving#conversations
+	slackReplies := []slack.Message{
+		{
+			Msg: slack.Msg{
+				ReplyCount:      3,
+				Type:            "message",
+				User:            "Greg",
+				ThreadTimestamp: "1234568780",
+				Replies: []slack.Reply{
+					{
+						Timestamp: "123",
+						User:      "Karl",
+					},
+				},
+			},
+		},
+		{
+			Msg: slack.Msg{
+				Type:            "message",
+				User:            "Tom",
+				Text:            "abc",
+				ThreadTimestamp: "1234",
+				ParentUserId:    "1234",
+			},
+		},
+	}
+
+	SlackMockClient.GetConversationRepliesFunc = func(params *slack.GetConversationRepliesParameters) ([]slack.Message, bool, string, error) {
+		return slackReplies, false, "", nil
+	}
+
+	message, _ := SlackImpl.GetConversationReplies("channel id", "now")
+
+	require.Equal(t, 2, len(message))
+	assert.Equal(t, "1234568780", message[0].ThreadTimestamp)
+	assert.Equal(t, "1234", message[1].ThreadTimestamp)
+	assert.Equal(t, "Greg", message[0].User)
+	assert.Equal(t, "Tom", message[1].User)
+}
+
+func TestGetConversationRepliesErrors(t *testing.T) {
+	Before(t)
+	defer After()
+
+	SlackMockClient.GetConversationRepliesFunc = func(params *slack.GetConversationRepliesParameters) ([]slack.Message, bool, string, error) {
+		return nil, false, "", errors.New("BOOM")
+	}
+
+	_, err := SlackImpl.GetConversationReplies("", "")
+
+	require.NotNil(t, err)
+	errMsg := err.Error()
+	assert.True(t, strings.HasPrefix(errMsg, "cannot get channel replies="), "\"cannot get channel replies=BOOM\", actual: %q", errMsg)
+	assert.True(t, strings.HasSuffix(errMsg, "=BOOM"), "\"cannot get channel replies=BOOM\", actual: %q", errMsg)
+}
+
 func TestSendRichMessage(t *testing.T) {
 	Before(t)
 	defer After()
@@ -137,7 +198,7 @@ func TestIncomingMessages(t *testing.T) {
 	select {
 	case msg := <-incomingMessages:
 		assert.Equal(t, "ReceivedMessage", msg.EventDef.Name)
-		payload := msg.Payload.(messageEvent)
+		payload := msg.Payload.(MessageEvent)
 		assert.Equal(t, "id-abc", payload.ChannelId)
 		assert.Equal(t, "hello there ...", payload.Message)
 		assert.Equal(t, "user-id-123", payload.User.Id)
@@ -184,7 +245,7 @@ func TestIncomingMessages(t *testing.T) {
 			select {
 			case msg := <-incomingMessages:
 				assert.Equal(t, "ReceivedMessage", msg.EventDef.Name)
-				payload := msg.Payload.(messageEvent)
+				payload := msg.Payload.(MessageEvent)
 				assert.Equal(t, test.expectedThreadTimestamp, payload.ThreadTimestamp)
 			default:
 				assert.Fail(t, "expected message event")
@@ -263,7 +324,8 @@ type MockClient struct {
 	// map stores all the sent messages by channelId (key is channelId)
 	OutgoingMessages map[string][]*slack.OutgoingMessage
 	// Slice of rich messages
-	PostMessageFunc func(channel string, opts ...slack.MsgOption) (string, string, error)
+	PostMessageFunc            func(channel string, opts ...slack.MsgOption) (string, string, error)
+	GetConversationRepliesFunc func(params *slack.GetConversationRepliesParameters) ([]slack.Message, bool, string, error)
 }
 
 func NewMockClient(t *testing.T) *MockClient {
@@ -273,6 +335,9 @@ func NewMockClient(t *testing.T) *MockClient {
 	m.OutgoingMessages = make(map[string][]*slack.OutgoingMessage)
 	m.PostMessageFunc = func(channel string, params ...slack.MsgOption) (string, string, error) {
 		return "", "", nil
+	}
+	m.GetConversationRepliesFunc = func(params *slack.GetConversationRepliesParameters) ([]slack.Message, bool, string, error) {
+		return nil, false, "", nil
 	}
 	return m
 }
@@ -316,4 +381,8 @@ func (m *MockClient) SendMessage(message *slack.OutgoingMessage) {
 
 func (m *MockClient) PostMessage(channel string, opts ...slack.MsgOption) (string, string, error) {
 	return m.PostMessageFunc(channel, opts...)
+}
+
+func (m *MockClient) GetConversationReplies(params *slack.GetConversationRepliesParameters) ([]slack.Message, bool, string, error) {
+	return m.GetConversationRepliesFunc(params)
 }

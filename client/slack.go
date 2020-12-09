@@ -29,6 +29,7 @@ type client interface {
 	NewOutgoingMessage(message, channelId string, options ...slack.RTMsgOption) *slack.OutgoingMessage
 	SendMessage(message *slack.OutgoingMessage)
 	PostMessage(channel string, opts ...slack.MsgOption) (string, string, error)
+	GetConversationReplies(params *slack.GetConversationRepliesParameters) ([]slack.Message, bool, string, error)
 }
 
 // our slack implementation makes consistent use of channel id
@@ -36,6 +37,7 @@ type Slack interface {
 	SendMessage(message, channelId, threadTimestamp string)
 	SendRichMessage(rm RichMessage) (respChannel string, respTimestamp string, err error)
 	IncomingMessages() <-chan flyte.Event
+	GetConversationReplies(channel string, threadTimestamp string) ([]slack.Message, error)
 }
 
 type slackClient struct {
@@ -44,6 +46,22 @@ type slackClient struct {
 	incomingEvents chan slack.RTMEvent
 	// messages to be consumed by API (filtered incoming events)
 	incomingMessages chan flyte.Event
+}
+
+func (sl *slackClient) GetConversationReplies(channelId, threadTimestamp string) ([]slack.Message, error) {
+	params := &slack.GetConversationRepliesParameters{
+		ChannelID: channelId,
+		Timestamp: threadTimestamp,
+	}
+
+	msg, _, _, err := sl.client.GetConversationReplies(params)
+
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("cannot get channel replies=%v", err))
+	}
+	logger.Infof("received message reply for timestamp=%s sent to channel=%s", threadTimestamp, channelId)
+
+	return msg, nil
 }
 
 func NewSlack(token string) Slack {
@@ -109,7 +127,7 @@ func toFlyteMessageEvent(event *slack.MessageEvent, user *slack.User) flyte.Even
 	}
 }
 
-type messageEvent struct {
+type MessageEvent struct {
 	ChannelId       string        `json:"channelId"`
 	User            user          `json:"user"`
 	Message         string        `json:"message"`
@@ -119,8 +137,8 @@ type messageEvent struct {
 	Replies         []slack.Reply `json:"replies"`
 }
 
-func newMessageEvent(e *slack.MessageEvent, u *slack.User) messageEvent {
-	return messageEvent{
+func newMessageEvent(e *slack.MessageEvent, u *slack.User) MessageEvent {
+	return MessageEvent{
 		ChannelId:       e.Channel,
 		User:            newUser(u),
 		Message:         e.Text,
