@@ -84,14 +84,18 @@ This method implements the [slack api of conversations.replies](https://api.slac
     }
     
 Returned events
+
 `GetConversationRepliesSuccess`
+
 The message is of the same structure as what is displayed on the [slack api for retrieving threads](https://api.slack.com/messaging/retrieving#pulling_threads)
 ```json
 {
   "message": { ... }
 }
 ```
+
 `GetConversationRepliesFailed`
+
 ```json
 {
   "error": "..."
