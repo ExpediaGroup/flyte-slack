@@ -28,10 +28,6 @@ type MockSlack struct {
 	GetConversationRepliesFunc func(channel string, threadTimestamp string) ([]slack.Message, error)
 }
 
-func (m *MockSlack) GetConversationReplies(channel string, threadTimestamp string) ([]slack.Message, error) {
-	return m.GetConversationRepliesFunc(channel, threadTimestamp)
-}
-
 func NewMockSlack() *MockSlack {
 
 	m := &MockSlack{}
@@ -49,4 +45,8 @@ func (m *MockSlack) SendRichMessage(rm client.RichMessage) (string, string, erro
 
 func (m *MockSlack) IncomingMessages() <-chan flyte.Event {
 	return make(chan flyte.Event)
+}
+
+func (m *MockSlack) GetConversationReplies(channel string, threadTimestamp string) ([]slack.Message, error) {
+	return m.GetConversationRepliesFunc(channel, threadTimestamp)
 }

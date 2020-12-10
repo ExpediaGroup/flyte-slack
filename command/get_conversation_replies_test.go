@@ -18,6 +18,7 @@ package command
 
 import (
 	"github.com/HotelsDotCom/flyte-client/flyte"
+	"github.com/slack-go/slack"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -28,7 +29,7 @@ func TestGetConversationRepliesCommandIsPopulated(t *testing.T) {
 
 	assert.Equal(t, "GetConversationReplies", command.Name)
 	require.Equal(t, 2, len(command.OutputEvents))
-	assert.Equal(t, "GetConversationReplies", command.OutputEvents[0].Name)
+	assert.Equal(t, "GetConversationRepliesSuccess", command.OutputEvents[0].Name)
 	assert.Equal(t, "GetConversationRepliesFailed", command.OutputEvents[1].Name)
 }
 
@@ -76,4 +77,50 @@ func TestGetConversationRepliesShouldReturnFatalErrorEventWhenCalledWithMissingC
 	output := event.Payload.(GetConversationRepliesErrorOutput)
 	assert.Equal(t, "GetConversationRepliesFailed", event.EventDef.Name)
 	assert.Equal(t, "missing threadTimestamp field, missing channel id field", output.Error)
+}
+
+func TestGetConversationRepliesReturnsGetConversationRepliesEvent(t *testing.T) {
+
+	BeforeMessage()
+	defer AfterMessage()
+
+	// Mirror what is on https://api.slack.com/messaging/retrieving#conversations
+	slackReplies := []slack.Message{
+		{
+			Msg: slack.Msg{
+				ReplyCount:      3,
+				Type:            "message",
+				User:            "Greg",
+				ThreadTimestamp: "1234568780",
+				Replies: []slack.Reply{
+					{
+						Timestamp: "123",
+						User:      "Karl",
+					},
+				},
+			},
+		},
+		{
+			Msg: slack.Msg{
+				Type:            "message",
+				User:            "Tom",
+				Text:            "abc",
+				ThreadTimestamp: "1234",
+				ParentUserId:    "1234",
+			},
+		},
+	}
+
+	MessageMockSlack.GetConversationRepliesFunc = func(channel string, threadTimestamp string) ([]slack.Message, error) {
+		return slackReplies, nil
+	}
+
+	handler := GetConversationReplies(MessageMockSlack).Handler
+	event := handler([]byte(`{"threadTimestamp": "yo", "channelId": "xyz"}`))
+
+	output := event.Payload.(GetConversationRepliesOutput)
+	require.Equal(t, "1234568780", output.Message[0].ThreadTimestamp)
+	require.Equal(t, "1234", output.Message[1].ThreadTimestamp)
+	require.Equal(t, "Greg", output.Message[0].User)
+	require.Equal(t, "Tom", output.Message[1].User)
 }

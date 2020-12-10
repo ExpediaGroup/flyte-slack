@@ -26,7 +26,7 @@ import (
 )
 
 var (
-	getConversationRepliesEventDef       = flyte.EventDef{Name: "GetConversationReplies"}
+	getConversationRepliesEventDef       = flyte.EventDef{Name: "GetConversationRepliesSuccess"}
 	getConversationRepliesFailedEventDef = flyte.EventDef{Name: "GetConversationRepliesFailed"}
 )
 
@@ -40,12 +40,10 @@ type GetConversationRepliesOutput struct {
 }
 
 type GetConversationRepliesErrorOutput struct {
-	GetConversationRepliesOutput
 	Error string `json:"error"`
 }
 
 func GetConversationReplies(slack client.Slack) flyte.Command {
-
 	return flyte.Command{
 		Name:         "GetConversationReplies",
 		OutputEvents: []flyte.EventDef{getConversationRepliesEventDef, getConversationRepliesFailedEventDef},
@@ -54,7 +52,6 @@ func GetConversationReplies(slack client.Slack) flyte.Command {
 }
 
 func getConversationRepliesHandler(slack client.Slack) func(json.RawMessage) flyte.Event {
-
 	return func(rawInput json.RawMessage) flyte.Event {
 
 		input := GetConversationRepliesInput{}
@@ -70,7 +67,7 @@ func getConversationRepliesHandler(slack client.Slack) func(json.RawMessage) fly
 			errorMessages = append(errorMessages, "missing channel id field")
 		}
 		if len(errorMessages) != 0 {
-			return newGetConversationRepliesFailedEvent(nil, strings.Join(errorMessages, ", "))
+			return newGetConversationRepliesFailedEvent(strings.Join(errorMessages, ", "))
 		}
 
 		slackReplies, err := slack.GetConversationReplies(input.ChannelId, input.ThreadTimestamp)
@@ -84,18 +81,15 @@ func getConversationRepliesHandler(slack client.Slack) func(json.RawMessage) fly
 }
 
 func newGetConversationRepliesEvent(message []slack.Message) flyte.Event {
-
 	return flyte.Event{
 		EventDef: getConversationRepliesEventDef,
 		Payload:  GetConversationRepliesOutput{Message: message},
 	}
 }
 
-func newGetConversationRepliesFailedEvent(message []slack.Message, err string) flyte.Event {
-
-	output := GetConversationRepliesOutput{Message: message}
+func newGetConversationRepliesFailedEvent(err string) flyte.Event {
 	return flyte.Event{
 		EventDef: getConversationRepliesFailedEventDef,
-		Payload:  GetConversationRepliesErrorOutput{GetConversationRepliesOutput: output, Error: err},
+		Payload:  GetConversationRepliesErrorOutput{Error: err},
 	}
 }
