@@ -78,6 +78,8 @@ The returned event payload is the same as the input.
 
 ### GetConversationReplies
 This method implements the [slack api of conversations.replies](https://api.slack.com/methods/conversations.replies)
+Note: Pagination is not currently supported for this command.
+
     {
         "channelId": "...", // required
         "threadTimestamp": "..." // required
