@@ -19,11 +19,13 @@ package command
 import (
 	"github.com/ExpediaGroup/flyte-slack/client"
 	"github.com/HotelsDotCom/flyte-client/flyte"
+	"github.com/slack-go/slack"
 )
 
 type MockSlack struct {
-	SendMessageCalls    map[string][]string
-	SendRichMessageFunc func(rm client.RichMessage) (string, string, error)
+	SendMessageCalls           map[string][]string
+	SendRichMessageFunc        func(rm client.RichMessage) (string, string, error)
+	GetConversationRepliesFunc func(channel string, threadTimestamp string) ([]slack.Message, error)
 }
 
 func NewMockSlack() *MockSlack {
@@ -43,4 +45,8 @@ func (m *MockSlack) SendRichMessage(rm client.RichMessage) (string, string, erro
 
 func (m *MockSlack) IncomingMessages() <-chan flyte.Event {
 	return make(chan flyte.Event)
+}
+
+func (m *MockSlack) GetConversationReplies(channel string, threadTimestamp string) ([]slack.Message, error) {
+	return m.GetConversationRepliesFunc(channel, threadTimestamp)
 }

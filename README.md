@@ -76,6 +76,31 @@ The returned event payload is the same as the input.
 }
 ```
 
+### GetConversationReplies
+This method implements the [slack api of conversations.replies](https://api.slack.com/methods/conversations.replies)
+    {
+        "channelId": "...", // required
+        "threadTimestamp": "..." // required
+    }
+    
+Returned events
+
+`GetConversationRepliesSuccess`
+
+The message is of the same structure as what is displayed on the [slack api for retrieving threads](https://api.slack.com/messaging/retrieving#pulling_threads)
+```json
+{
+  "message": { ... }
+}
+```
+
+`GetConversationRepliesFailed`
+
+```json
+{
+  "error": "..."
+}
+```
 ## Events 
 
 ### ReceivedMessage

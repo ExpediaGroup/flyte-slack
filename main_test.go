@@ -19,6 +19,7 @@ package main
 import (
 	"github.com/ExpediaGroup/flyte-slack/client"
 	"github.com/HotelsDotCom/flyte-client/flyte"
+	"github.com/slack-go/slack"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -31,7 +32,7 @@ func TestPackDefinitionIsPopulated(t *testing.T) {
 	assert.Equal(t, "Slack", packDef.Name)
 	assert.Equal(t, "https://github.com/ExpediaGroup/flyte-slack/blob/master/README.md", packDef.HelpURL.String())
 	require.Equal(t, 0, len(packDef.Labels))
-	require.Equal(t, 2, len(packDef.Commands))
+	require.Equal(t, 3, len(packDef.Commands))
 	require.Equal(t, 1, len(packDef.EventDefs))
 }
 
@@ -45,4 +46,8 @@ func (DummySlack) SendRichMessage(client.RichMessage) (string, string, error) { 
 
 func (DummySlack) IncomingMessages() <-chan flyte.Event {
 	return make(chan flyte.Event)
+}
+
+func (DummySlack) GetConversationReplies(channelId, threadTimestamp string) ([]slack.Message, error) {
+	return nil, nil
 }
