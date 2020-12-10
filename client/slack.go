@@ -127,7 +127,7 @@ func toFlyteMessageEvent(event *slack.MessageEvent, user *slack.User) flyte.Even
 	}
 }
 
-type MessageEvent struct {
+type messageEvent struct {
 	ChannelId       string        `json:"channelId"`
 	User            user          `json:"user"`
 	Message         string        `json:"message"`
@@ -137,8 +137,8 @@ type MessageEvent struct {
 	Replies         []slack.Reply `json:"replies"`
 }
 
-func newMessageEvent(e *slack.MessageEvent, u *slack.User) MessageEvent {
-	return MessageEvent{
+func newMessageEvent(e *slack.MessageEvent, u *slack.User) messageEvent {
+	return messageEvent{
 		ChannelId:       e.Channel,
 		User:            newUser(u),
 		Message:         e.Text,

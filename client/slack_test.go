@@ -198,7 +198,7 @@ func TestIncomingMessages(t *testing.T) {
 	select {
 	case msg := <-incomingMessages:
 		assert.Equal(t, "ReceivedMessage", msg.EventDef.Name)
-		payload := msg.Payload.(MessageEvent)
+		payload := msg.Payload.(messageEvent)
 		assert.Equal(t, "id-abc", payload.ChannelId)
 		assert.Equal(t, "hello there ...", payload.Message)
 		assert.Equal(t, "user-id-123", payload.User.Id)
@@ -245,7 +245,7 @@ func TestIncomingMessages(t *testing.T) {
 			select {
 			case msg := <-incomingMessages:
 				assert.Equal(t, "ReceivedMessage", msg.EventDef.Name)
-				payload := msg.Payload.(MessageEvent)
+				payload := msg.Payload.(messageEvent)
 				assert.Equal(t, test.expectedThreadTimestamp, payload.ThreadTimestamp)
 			default:
 				assert.Fail(t, "expected message event")
