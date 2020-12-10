@@ -75,16 +75,9 @@ The returned event payload is the same as the input.
   "error": "..."
 }
 ```
-```json
-{
-  "inputMessage": { ... },
-  "error": "..."
-}
-```
 
 ### GetConversationReplies
 This method implements the [slack api of conversations.replies](https://api.slack.com/methods/conversations.replies)
-
     {
         "channelId": "...", // required
         "threadTimestamp": "..." // required
