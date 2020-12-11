@@ -57,9 +57,9 @@ func (sl *slackClient) GetConversationReplies(channelId, threadTimestamp string)
 	msg, _, _, err := sl.client.GetConversationReplies(params)
 
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("cannot get channel replies=%v", err))
+		return nil, fmt.Errorf("cannot get channel replies=%v", err)
 	}
-	logger.Infof("received message reply for timestamp=%s sent to channel=%s", threadTimestamp, channelId)
+	logger.Debugf("received message reply for timestamp=%s sent to channel=%s", threadTimestamp, channelId)
 
 	return msg, nil
 }

@@ -70,7 +70,7 @@ func GetPackDef(slack client.Slack) flyte.PackDef {
 		Commands: []flyte.Command{
 			command.SendMessage(slack),
 			command.SendRichMessage(slack),
-			command.GetConversationReplies(slack),
+			command.CreateConversationReplies(slack),
 		},
 		EventDefs: []flyte.EventDef{
 			{Name: "ReceivedMessage"},

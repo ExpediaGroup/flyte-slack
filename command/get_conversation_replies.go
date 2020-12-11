@@ -18,11 +18,11 @@ package command
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/ExpediaGroup/flyte-slack/client"
 	"github.com/HotelsDotCom/flyte-client/flyte"
 	"github.com/slack-go/slack"
-	"strings"
 )
 
 var (
@@ -36,22 +36,25 @@ type GetConversationRepliesInput struct {
 }
 
 type GetConversationRepliesOutput struct {
-	Message []slack.Message `json:"messages"`
+	Messages []slack.Message `json:"messages"`
 }
 
 type GetConversationRepliesErrorOutput struct {
 	Error string `json:"error"`
 }
 
-func GetConversationReplies(slack client.Slack) flyte.Command {
+func CreateConversationReplies(slack client.Slack) flyte.Command {
 	return flyte.Command{
-		Name:         "GetConversationReplies",
-		OutputEvents: []flyte.EventDef{getConversationRepliesEventDef, getConversationRepliesFailedEventDef},
-		Handler:      getConversationRepliesHandler(slack),
+		Name: "CreateConversationReplies",
+		OutputEvents: []flyte.EventDef{
+			getConversationRepliesEventDef,
+			getConversationRepliesFailedEventDef,
+		},
+		Handler: createHandler(slack),
 	}
 }
 
-func getConversationRepliesHandler(slack client.Slack) func(json.RawMessage) flyte.Event {
+func createHandler(slack client.Slack) func(json.RawMessage) flyte.Event {
 	return func(rawInput json.RawMessage) flyte.Event {
 
 		input := GetConversationRepliesInput{}
@@ -59,31 +62,34 @@ func getConversationRepliesHandler(slack client.Slack) func(json.RawMessage) fly
 			return flyte.NewFatalEvent(fmt.Sprintf("invalid input: %v", err))
 		}
 
-		errorMessages := []string{}
-		if input.ThreadTimestamp == "" {
-			errorMessages = append(errorMessages, "missing threadTimestamp field")
-		}
-		if input.ChannelId == "" {
-			errorMessages = append(errorMessages, "missing channel id field")
-		}
-		if len(errorMessages) != 0 {
-			return newGetConversationRepliesFailedEvent(strings.Join(errorMessages, ", "))
+		if err := validateInput(input); err != nil {
+			return newGetConversationRepliesFailedEvent(err.Error())
 		}
 
 		slackReplies, err := slack.GetConversationReplies(input.ChannelId, input.ThreadTimestamp)
 
 		if err != nil {
-			errorMessages = append(errorMessages, fmt.Sprintf("there was an error retrieving the channel slackReplies: %v", err))
+			return newGetConversationRepliesFailedEvent(fmt.Errorf("there was an error retrieving the channel slackReplies: %v", err).Error())
 		}
 
 		return newGetConversationRepliesEvent(slackReplies)
 	}
 }
 
+func validateInput(in GetConversationRepliesInput) error {
+	if in.ThreadTimestamp == "" {
+		return errors.New("missing threadTimestamp field")
+	}
+	if in.ChannelId == "" {
+		return errors.New("missing channel id field")
+	}
+	return nil
+}
+
 func newGetConversationRepliesEvent(message []slack.Message) flyte.Event {
 	return flyte.Event{
 		EventDef: getConversationRepliesEventDef,
-		Payload:  GetConversationRepliesOutput{Message: message},
+		Payload:  GetConversationRepliesOutput{Messages: message},
 	}
 }
 

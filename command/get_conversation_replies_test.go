@@ -25,16 +25,16 @@ import (
 )
 
 func TestGetConversationRepliesCommandIsPopulated(t *testing.T) {
-	command := GetConversationReplies(MessageMockSlack)
+	command := CreateConversationReplies(MessageMockSlack)
 
-	assert.Equal(t, "GetConversationReplies", command.Name)
+	assert.Equal(t, "CreateConversationReplies", command.Name)
 	require.Equal(t, 2, len(command.OutputEvents))
 	assert.Equal(t, "GetConversationRepliesSuccess", command.OutputEvents[0].Name)
 	assert.Equal(t, "GetConversationRepliesFailed", command.OutputEvents[1].Name)
 }
 
 func TestGetConversationRepliesShouldReturnFatalErrorEventWhenCalledWithInvalidJSON(t *testing.T) {
-	cmd := GetConversationReplies(nil)
+	cmd := CreateConversationReplies(nil)
 
 	event := cmd.Handler([]byte(`.`))
 
@@ -47,7 +47,7 @@ func TestGetConversationRepliesShouldReturnFatalErrorEventWhenCalledWithMissingT
 	BeforeMessage()
 	defer AfterMessage()
 
-	handler := GetConversationReplies(MessageMockSlack).Handler
+	handler := CreateConversationReplies(MessageMockSlack).Handler
 	event := handler([]byte(`{"channelId": "UXB456Y"}`))
 
 	output := event.Payload.(GetConversationRepliesErrorOutput)
@@ -59,7 +59,7 @@ func TestGetConversationRepliesShouldReturnFatalErrorEventWhenCalledWithMissingC
 	BeforeMessage()
 	defer AfterMessage()
 
-	handler := GetConversationReplies(MessageMockSlack).Handler
+	handler := CreateConversationReplies(MessageMockSlack).Handler
 	event := handler([]byte(`{"threadTimestamp": "333333"}`))
 
 	output := event.Payload.(GetConversationRepliesErrorOutput)
@@ -71,12 +71,12 @@ func TestGetConversationRepliesShouldReturnFatalErrorEventWhenCalledWithMissingC
 	BeforeMessage()
 	defer AfterMessage()
 
-	handler := GetConversationReplies(MessageMockSlack).Handler
+	handler := CreateConversationReplies(MessageMockSlack).Handler
 	event := handler([]byte(`{"abc": "123"}`))
 
 	output := event.Payload.(GetConversationRepliesErrorOutput)
 	assert.Equal(t, "GetConversationRepliesFailed", event.EventDef.Name)
-	assert.Equal(t, "missing threadTimestamp field, missing channel id field", output.Error)
+	assert.Equal(t, "missing threadTimestamp field", output.Error)
 }
 
 func TestGetConversationRepliesReturnsGetConversationRepliesEvent(t *testing.T) {
@@ -115,12 +115,12 @@ func TestGetConversationRepliesReturnsGetConversationRepliesEvent(t *testing.T) 
 		return slackReplies, nil
 	}
 
-	handler := GetConversationReplies(MessageMockSlack).Handler
+	handler := CreateConversationReplies(MessageMockSlack).Handler
 	event := handler([]byte(`{"threadTimestamp": "yo", "channelId": "xyz"}`))
 
 	output := event.Payload.(GetConversationRepliesOutput)
-	require.Equal(t, "1234568780", output.Message[0].ThreadTimestamp)
-	require.Equal(t, "1234", output.Message[1].ThreadTimestamp)
-	require.Equal(t, "Greg", output.Message[0].User)
-	require.Equal(t, "Tom", output.Message[1].User)
+	require.Equal(t, "1234568780", output.Messages[0].ThreadTimestamp)
+	require.Equal(t, "1234", output.Messages[1].ThreadTimestamp)
+	require.Equal(t, "Greg", output.Messages[0].User)
+	require.Equal(t, "Tom", output.Messages[1].User)
 }
