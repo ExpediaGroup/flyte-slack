@@ -17,6 +17,7 @@ limitations under the License.
 package main
 
 import (
+	"github.com/ExpediaGroup/flyte-slack/cache"
 	"github.com/ExpediaGroup/flyte-slack/client"
 	"github.com/ExpediaGroup/flyte-slack/command"
 	api "github.com/HotelsDotCom/flyte-client/client"
@@ -32,7 +33,14 @@ const defaultPackName = "Slack"
 func main() {
 
 	slack := client.NewSlack(slackToken())
-	packDef := GetPackDef(slack)
+	cc, err := cacheConfig()
+	if err != nil {
+		logger.Fatal(err)
+	}
+
+	cache := cache.New(cc)
+
+	packDef := GetPackDef(slack, cache)
 	pack := flyte.NewPack(packDef, api.NewClient(apiHost(), 10*time.Second))
 	pack.Start()
 
@@ -52,7 +60,7 @@ func ListenAndServe(slack client.Slack, pack flyte.Pack) {
 	select {}
 }
 
-func GetPackDef(slack client.Slack) flyte.PackDef {
+func GetPackDef(slack client.Slack, cache cache.Cache) flyte.PackDef {
 
 	helpUrl, err := url.Parse(packDefHelpUrl)
 	if err != nil {
@@ -70,6 +78,7 @@ func GetPackDef(slack client.Slack) flyte.PackDef {
 		Commands: []flyte.Command{
 			command.SendMessage(slack),
 			command.SendRichMessage(slack),
+			command.GetChannelInfo(slack, cache),
 		},
 		EventDefs: []flyte.EventDef{
 			{Name: "ReceivedMessage"},

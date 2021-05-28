@@ -17,15 +17,19 @@ limitations under the License.
 package main
 
 import (
+	"github.com/ExpediaGroup/flyte-slack/cache"
 	"github.com/HotelsDotCom/go-logger"
 	"net/url"
 	"os"
+	"strconv"
+	"time"
 )
 
 const (
-	apiEnvKey   = "FLYTE_API"
-	tokenEnvKey = "FLYTE_SLACK_TOKEN"
-	packNameKey = "PACK_NAME"
+	apiEnvKey             = "FLYTE_API"
+	tokenEnvKey           = "FLYTE_SLACK_TOKEN"
+	packNameKey           = "PACK_NAME"
+	renewConversationList = "RENEW_CONVERSATION_LIST" // how often conversation list is updated  cache (hours)
 )
 
 // extracted to variable for testing
@@ -49,6 +53,19 @@ func slackToken() string {
 	return getEnv(tokenEnvKey, true)
 }
 
+func cacheConfig() (*cache.Config, error) {
+	rc := getEnvDefault(renewConversationList, "24")
+
+	t, err := strconv.Atoi(rc)
+	if err != nil {
+		return nil, err
+	}
+
+	return &cache.Config{
+		RenewConversationListFrequency: time.Duration(t) * time.Hour,
+	}, nil
+}
+
 func getEnv(key string, required bool) string {
 
 	if v, _ := lookupEnv(key); v != "" {
@@ -59,4 +76,12 @@ func getEnv(key string, required bool) string {
 		logger.Fatalf("env=%s not set", key)
 	}
 	return ""
+}
+
+func getEnvDefault(key string, def string) string {
+	if v, _ := lookupEnv(key); v != "" {
+		return v
+	}
+
+	return def
 }

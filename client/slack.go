@@ -19,6 +19,7 @@ package client
 import (
 	"errors"
 	"fmt"
+	"github.com/ExpediaGroup/flyte-slack/types"
 	"github.com/HotelsDotCom/flyte-client/flyte"
 	"github.com/HotelsDotCom/go-logger"
 	"github.com/slack-go/slack"
@@ -29,6 +30,7 @@ type client interface {
 	NewOutgoingMessage(message, channelId string, options ...slack.RTMsgOption) *slack.OutgoingMessage
 	SendMessage(message *slack.OutgoingMessage)
 	PostMessage(channel string, opts ...slack.MsgOption) (string, string, error)
+	GetConversations(params *slack.GetConversationsParameters) (channels []slack.Channel, nextCursor string, err error)
 }
 
 // our slack implementation makes consistent use of channel id
@@ -36,6 +38,9 @@ type Slack interface {
 	SendMessage(message, channelId, threadTimestamp string)
 	SendRichMessage(rm RichMessage) (respChannel string, respTimestamp string, err error)
 	IncomingMessages() <-chan flyte.Event
+	// GetConversations is a heavy call used to fetch data about all channels in a workspace
+	// intended to be cached, not called each time this is needed
+	GetConversations() ([]types.Conversation, error)
 }
 
 type slackClient struct {
@@ -60,6 +65,51 @@ func NewSlack(token string) Slack {
 	logger.Info("initialized slack")
 	go sl.handleMessageEvents()
 	return sl
+}
+
+const (
+	getConversationsLimit = 1000 // max 1000
+	excludeArchived = true
+)
+
+func (sl *slackClient) GetConversations() ([]types.Conversation, error) {
+	params := &slack.GetConversationsParameters{
+		ExcludeArchived: excludeArchived,
+		Limit:           getConversationsLimit,
+	}
+
+	chans, cursor, err := sl.client.GetConversations(params)
+	if err != nil {
+		return nil, err
+	}
+
+	out := make([]types.Conversation, 0, len(chans))
+	for i := range chans {
+		out = append(out, types.Conversation{
+			ID:    chans[i].ID,
+			Name:  chans[i].Name,
+			Topic: chans[i].Topic.Value,
+		})
+	}
+
+	for cursor != "" {
+		params.Cursor = cursor
+
+		chans, cursor, err = sl.client.GetConversations(params)
+		if err != nil {
+			return nil, err
+		}
+
+		for i := range chans {
+			out = append(out, types.Conversation{
+				ID:    chans[i].ID,
+				Name:  chans[i].Name,
+				Topic: chans[i].Topic.Value,
+			})
+		}
+	}
+
+	return out, nil
 }
 
 // Sends slack message to provided channel. Channel does not have to be joined.
