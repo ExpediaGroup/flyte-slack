@@ -18,6 +18,7 @@ package command
 
 import (
 	"github.com/ExpediaGroup/flyte-slack/client"
+	"github.com/ExpediaGroup/flyte-slack/types"
 	"github.com/HotelsDotCom/flyte-client/flyte"
 )
 
@@ -43,4 +44,8 @@ func (m *MockSlack) SendRichMessage(rm client.RichMessage) (string, string, erro
 
 func (m *MockSlack) IncomingMessages() <-chan flyte.Event {
 	return make(chan flyte.Event)
+}
+
+func (m *MockSlack) GetConversations() ([]types.Conversation, error) {
+	return []types.Conversation(nil), nil
 }
