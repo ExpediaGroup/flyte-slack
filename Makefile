@@ -1,5 +1,5 @@
 test:
-	go test ./...
+	go build && go test ./...
 build: test
 	go build .
 docker-build:
