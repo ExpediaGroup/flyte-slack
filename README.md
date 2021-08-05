@@ -1,8 +1,8 @@
 # flyte-slack
 
 [![Build Status](https://github.com/ExpediaGroup/flyte-slack/workflows/Build/badge.svg?branch=master&event=push)](https://github.com/ExpediaGroup/flyte-slack/actions?query=workflow:"Build"branch:"master")
-[![Docker Stars](https://img.shields.io/docker/stars/hotelsdotcom/flyte-slack.svg)](https://hub.docker.com/r/hotelsdotcom/flyte-slack)
-[![Docker Pulls](https://img.shields.io/docker/pulls/hotelsdotcom/flyte-slack.svg)](https://hub.docker.com/r/hotelsdotcom/flyte-slack)
+[![Docker Stars](https://img.shields.io/docker/stars/expediagroup/flyte-slack.svg)](https://hub.docker.com/r/expediagroup/flyte-slack)
+[![Docker Pulls](https://img.shields.io/docker/pulls/expediagroup/flyte-slack.svg)](https://hub.docker.com/r/expediagroup/flyte-slack)
 
 A Slack pack for flyte.
 
