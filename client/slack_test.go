@@ -317,3 +317,7 @@ func (m *MockClient) SendMessage(message *slack.OutgoingMessage) {
 func (m *MockClient) PostMessage(channel string, opts ...slack.MsgOption) (string, string, error) {
 	return m.PostMessageFunc(channel, opts...)
 }
+
+func (m *MockClient) GetConversations(params *slack.GetConversationsParameters) (channels []slack.Channel, nextCursor string, err error) {
+	return nil, "", err
+}
