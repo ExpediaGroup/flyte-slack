@@ -1,6 +1,6 @@
 # flyte-slack
 
-![Build Status](https://travis-ci.org/ExpediaGroup/flyte-slack.svg?branch=master)
+[![Build Status](https://github.com/ExpediaGroup/flyte-slack/workflows/Build/badge.svg?branch=master&event=push)](https://github.com/ExpediaGroup/flyte-slack/actions?query=workflow:"Build"branch:"master")
 [![Docker Stars](https://img.shields.io/docker/stars/hotelsdotcom/flyte-slack.svg)](https://hub.docker.com/r/hotelsdotcom/flyte-slack)
 [![Docker Pulls](https://img.shields.io/docker/pulls/hotelsdotcom/flyte-slack.svg)](https://hub.docker.com/r/hotelsdotcom/flyte-slack)
 
