@@ -7,3 +7,6 @@ type Conversation struct {
 	Name  string `json:"name"`
 	Topic string `json:"topic"`
 }
+
+type Reactions struct {
+}
