@@ -163,9 +163,6 @@ func (sl *slackClient) handleMessageEvents() {
 			}
 			sl.incomingMessages <- toFlyteReactionAddedEvent(v, u)
 
-		default:
-			logger.Debugf("received  message for type = %v", v)
-
 		}
 	}
 }
