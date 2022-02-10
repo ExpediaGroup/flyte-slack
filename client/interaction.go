@@ -13,15 +13,14 @@ import (
 
 // InteractionHandler handles interactive message response.
 type InteractionHandler struct {
-	slackClient       *slack.Client
-	VerificationToken string
-	// messages to be consumed by API (filtered incoming events)
+	slackClient         *slack.Client
+	VerificationToken   string
 	InteractionMessages flyte.Pack
 }
 
 func (h InteractionHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
-	logger.Debugf("message action recieved ****  %+v", r)
+	logger.Debugf("message action recieved from slack payload= %+v", r)
 
 	if r.Method != http.MethodPost {
 		logger.Debugf("[ERROR] Invalid method: %s", r.Method)

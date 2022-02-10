@@ -45,8 +45,6 @@ type Slack interface {
 	GetConversations() ([]types.Conversation, error)
 	GetReactions(channelId, timestamp string)
 	ListReactions(count int, user string, channelId, threadTimestamp string) (text string)
-
-	//GetReactions(channelId, threadTimestamp string)
 }
 
 type slackClient struct {
@@ -304,7 +302,7 @@ func (sl *slackClient) ListReactions(count int, user string, channelId, threadTi
 
 	for i := range reaction {
 		if reaction[i].Type == "message" {
-			logger.Debugf("Chnnel = %v", reaction[i].Channel)
+			logger.Debugf("Channel = %v", reaction[i].Channel)
 			if reaction[i].Channel == channelId {
 				logger.Debugf("timestamp = %v", reaction[i].Message.ThreadTimestamp)
 				if reaction[i].Message.Timestamp == threadTimestamp {
@@ -317,8 +315,6 @@ func (sl *slackClient) ListReactions(count int, user string, channelId, threadTi
 			}
 
 		}
-		//logger.Debugf("Value of Type = %v , channel = %v Msg Timestamp = %v , Text = %v", reaction[i].Type,
-		//reaction[i].Channel, reaction[i].Message.ThreadTimestamp, reaction[i].Message.Text)
 	}
 
 	logger.Debugf("Value of paging  = %v", paging)
