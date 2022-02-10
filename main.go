@@ -48,22 +48,30 @@ func main() {
 	pack.Start()
 
 	go ListenAndServe(slack, pack)
+	ListenAndServeHttp(pack)
 
-	// Register handler to receive interactive message
-	// responses from slack (kicked by user action)
+}
+
+func ListenAndServeHttp(pack flyte.Pack) {
+
 	http.Handle("/interaction", client.InteractionHandler{
-		VerificationToken: "V5mEO0CzPYjbQ7MfStmlNqiQ",
+		VerificationToken:   "V5mEO0CzPYjbQ7MfStmlNqiQ",
+		InteractionMessages: pack,
 	})
-
 	log.Printf("[INFO] Server listening on :%s", "8092")
 	if err := http.ListenAndServe(":"+"8092", nil); err != nil {
 		log.Printf("[ERROR] %s", err)
 		return
 	}
 
+	logger.Debugf("Returning Flyte Event newButtonActionEvent...")
+
 }
 
 func ListenAndServe(slack client.Slack, pack flyte.Pack) {
+
+	// Register handler to receive interactive message
+	// responses from slack (kicked by user action)
 
 	// handle incoming messages
 	incomingMessages := slack.IncomingMessages()

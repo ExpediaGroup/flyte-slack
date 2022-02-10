@@ -55,6 +55,8 @@ type slackClient struct {
 	incomingEvents chan slack.RTMEvent
 	// messages to be consumed by API (filtered incoming events)
 	incomingMessages chan flyte.Event
+	// incoming interactions
+	incomingInteractions chan slack.InteractionCallback
 }
 
 func NewSlack(token string) Slack {
@@ -323,4 +325,33 @@ func (sl *slackClient) ListReactions(count int, user string, channelId, threadTi
 
 	return ""
 
+}
+
+func toFlyteButtonActionEvent(event slack.InteractionCallback, user *slack.User) flyte.Event {
+	logger.Debugf("Calling Flyte toFlyteButtonActionEvent Event...")
+	return flyte.Event{
+		EventDef: flyte.EventDef{Name: "ReceivedButtonAction"},
+		Payload:  newButtonActionEvent(event, user),
+	}
+}
+
+type newButtonAction struct {
+	ChannelId       string `json:"channelId"`
+	User            user   `json:"user"`
+	Action          string `json:"action"`
+	Timestamp       string `json:"timestamp"`
+	ActionTimestamp string `json:"actionTimestamp"`
+	OriginalMessage string `json:"originalMessage"`
+}
+
+func newButtonActionEvent(e slack.InteractionCallback, u *slack.User) newButtonAction {
+	logger.Debugf("Calling Flyte Event newButtonActionEvent...")
+	return newButtonAction{
+		ChannelId:       e.Channel.ID,
+		User:            newUser(u),
+		Action:          e.ActionCallback.AttachmentActions[0].Name,
+		Timestamp:       e.OriginalMessage.ThreadTimestamp,
+		ActionTimestamp: e.ActionTs,
+		OriginalMessage: e.CallbackID,
+	}
 }
