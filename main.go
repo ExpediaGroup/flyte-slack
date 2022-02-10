@@ -41,10 +41,8 @@ func main() {
 	}
 
 	cache := cache.New(cc)
-
 	packDef := GetPackDef(slack, cache)
 	pack := flyte.NewPack(packDef, api.NewClient(apiHost(), 10*time.Second))
-	pack = pack
 	pack.Start()
 
 	go ListenAndServe(slack, pack)
@@ -53,9 +51,8 @@ func main() {
 }
 
 func ListenAndServeHttp(pack flyte.Pack) {
-
 	http.Handle("/interaction", client.InteractionHandler{
-		VerificationToken:   "V5mEO0CzPYjbQ7MfStmlNqiQ",
+		VerificationToken:   slackVerificationToken(),
 		InteractionMessages: pack,
 	})
 	log.Printf("[INFO] Server listening on :%s", "8092")
@@ -63,8 +60,6 @@ func ListenAndServeHttp(pack flyte.Pack) {
 		log.Printf("[ERROR] %s", err)
 		return
 	}
-
-	logger.Debugf("Returning Flyte Event newButtonActionEvent...")
 
 }
 
