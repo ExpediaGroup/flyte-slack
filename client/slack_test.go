@@ -266,6 +266,16 @@ type MockClient struct {
 	PostMessageFunc func(channel string, opts ...slack.MsgOption) (string, string, error)
 }
 
+func (m *MockClient) GetReactions(item slack.ItemRef, params slack.GetReactionsParameters) (reactions []slack.ItemReaction, err error) {
+
+	return nil, nil
+}
+
+func (m *MockClient) ListReactions(params slack.ListReactionsParameters) ([]slack.ReactedItem, *slack.Paging, error) {
+	return nil, nil, nil
+
+}
+
 func NewMockClient(t *testing.T) *MockClient {
 
 	m := &MockClient{t: t}
