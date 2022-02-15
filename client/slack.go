@@ -158,10 +158,15 @@ func (sl *slackClient) handleMessageEvents() {
 			logger.Debugf("received reaction event for type = %v", v)
 			u, err := sl.client.GetUserInfo(v.User)
 			if err != nil {
-				logger.Errorf("cannot get info about user=%s: %v", v.User, err)
+				logger.Errorf("cannot get info about user=%v: %v", v.User, err)
 				continue
 			}
-			sl.incomingMessages <- toFlyteReactionAddedEvent(v, u)
+			itemuser, err := sl.client.GetUserInfo(v.ItemUser)
+			if err != nil {
+				logger.Errorf("cannot get info about user=%v: %v", v.ItemUser, err)
+				continue
+			}
+			sl.incomingMessages <- toFlyteReactionAddedEvent(v, u, itemuser)
 
 		}
 	}
@@ -225,7 +230,7 @@ func newUser(u *slack.User) user {
 	}
 }
 
-func newReactionEvent(e *slack.ReactionAddedEvent, u *slack.User) reactionAddedEvent {
+func newReactionEvent(e *slack.ReactionAddedEvent, u *slack.User, itemuser *slack.User) reactionAddedEvent {
 	return reactionAddedEvent{
 		ReactionUser:   newUser(u),
 		ReactionName:   e.Reaction,
@@ -233,6 +238,7 @@ func newReactionEvent(e *slack.ReactionAddedEvent, u *slack.User) reactionAddedE
 		ItemTimestamp:  e.Item.Timestamp,
 		ItemType:       e.Item.Type,
 		ChannelId:      e.Item.Channel,
+		ItemUser:       newUser(itemuser),
 	}
 
 }
@@ -247,11 +253,11 @@ type reactionAddedEvent struct {
 	ChannelId      string `json:"channelId"`
 }
 
-func toFlyteReactionAddedEvent(event *slack.ReactionAddedEvent, user *slack.User) flyte.Event {
+func toFlyteReactionAddedEvent(event *slack.ReactionAddedEvent, user *slack.User, itemuser *slack.User) flyte.Event {
 
 	return flyte.Event{
 		EventDef: flyte.EventDef{Name: "ReactionAdded"},
-		Payload:  newReactionEvent(event, user),
+		Payload:  newReactionEvent(event, user, itemuser),
 	}
 }
 
@@ -309,6 +315,7 @@ func (sl *slackClient) ListReactions(count int, user string, channelId, threadTi
 					logger.Debugf("Value of Type = %v , channel = %v Msg Timestamp = %v , Text = %v",
 						reaction[i].Type, reaction[i].Channel, reaction[i].Message.ThreadTimestamp,
 						reaction[i].Message.Text)
+					logger.Debugf("Value of the reaction = %+v", reaction[i])
 					return reaction[i].Message.Text
 				}
 
