@@ -27,16 +27,6 @@ type MockSlack struct {
 	SendRichMessageFunc func(rm client.RichMessage) (string, string, error)
 }
 
-func (m *MockSlack) GetReactions(channelId, timestamp string) {
-	//TODO implement me
-	return
-}
-
-func (m *MockSlack) ListReactions(count int, user string, channelId, threadTimestamp string) (text string) {
-	//TODO implement me
-	panic("implement me")
-}
-
 func NewMockSlack() *MockSlack {
 
 	m := &MockSlack{}

@@ -26,11 +26,10 @@ import (
 )
 
 const (
-	apiEnvKey                 = "FLYTE_API"
-	tokenEnvKey               = "FLYTE_SLACK_TOKEN"
-	packNameKey               = "PACK_NAME"
-	renewConversationList     = "RENEW_CONVERSATION_LIST"  // how often conversation list is updated  cache (hours)
-	slackVerificationTokenKey = "SLACK_VERIFICATION_TOKEN" //how to verify the requests
+	apiEnvKey             = "FLYTE_API"
+	tokenEnvKey           = "FLYTE_SLACK_TOKEN"
+	packNameKey           = "PACK_NAME"
+	renewConversationList = "RENEW_CONVERSATION_LIST" // how often conversation list is updated  cache (hours)
 )
 
 // extracted to variable for testing
@@ -52,10 +51,6 @@ func packName() string {
 
 func slackToken() string {
 	return getEnv(tokenEnvKey, true)
-}
-
-func slackVerificationToken() string {
-	return getEnv(slackVerificationTokenKey, true)
 }
 
 func cacheConfig() (*cache.Config, error) {
