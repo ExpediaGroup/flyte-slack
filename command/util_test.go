@@ -27,16 +27,6 @@ type MockSlack struct {
 	SendRichMessageFunc func(rm client.RichMessage) (string, string, error)
 }
 
-func (m *MockSlack) GetReactions(channelId, timestamp string) {
-	//TODO implement me
-	return
-}
-
-func (m *MockSlack) ListReactions(count int, user string, channelId, threadTimestamp string) (text string) {
-	//TODO implement me
-	panic("implement me")
-}
-
 func NewMockSlack() *MockSlack {
 
 	m := &MockSlack{}
@@ -58,4 +48,13 @@ func (m *MockSlack) IncomingMessages() <-chan flyte.Event {
 
 func (m *MockSlack) GetConversations() ([]types.Conversation, error) {
 	return []types.Conversation(nil), nil
+}
+
+func (m *MockSlack) ListReactions(count int, user string, channelId, threadTimestamp string) (text string) {
+	//TODO implement me
+	count = count
+	user = user
+	channelId = channelId
+	threadTimestamp = threadTimestamp
+	return ""
 }

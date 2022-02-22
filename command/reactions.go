@@ -5,63 +5,8 @@ import (
 	"fmt"
 	"github.com/ExpediaGroup/flyte-slack/client"
 	"github.com/HotelsDotCom/flyte-client/flyte"
-	"github.com/HotelsDotCom/go-logger"
 	"strings"
 )
-
-var (
-	getReactionEventDef       = flyte.EventDef{Name: "GetReactionSuccess"}
-	getReactionFailedEventDef = flyte.EventDef{Name: "GetReactionFailed"}
-)
-
-type GetReactionInput struct {
-	Message         string `json:"message"`
-	ThreadTimestamp string `json:"threadTimestamp"`
-	ChannelId       string `json:"channelId"`
-}
-
-type GetReactionOutput struct {
-	GetReactionInput
-}
-
-type GetReactionErrorOutput struct {
-	GetReactionOutput
-	Error string `json:"error"`
-}
-
-func GetReactionMsg(slack client.Slack) flyte.Command {
-
-	return flyte.Command{
-		Name:         "GetReactionMsg",
-		OutputEvents: []flyte.EventDef{getReactionEventDef, getReactionFailedEventDef},
-		Handler:      getReactionMessageHandler(slack),
-	}
-}
-
-func getReactionMessageHandler(slack client.Slack) func(json.RawMessage) flyte.Event {
-
-	return func(rawInput json.RawMessage) flyte.Event {
-
-		input := GetReactionInput{}
-		if err := json.Unmarshal(rawInput, &input); err != nil {
-			return flyte.NewFatalEvent(fmt.Sprintf("input is not valid: %v", err))
-		}
-
-		errorMessages := []string{}
-		if input.ThreadTimestamp == "" {
-			errorMessages = append(errorMessages, "missing Message Timestamp field")
-		}
-		if input.ChannelId == "" {
-			errorMessages = append(errorMessages, "missing channel id field")
-		}
-		if len(errorMessages) != 0 {
-			return newSendMessageFailedEvent(input.Message, input.ChannelId, strings.Join(errorMessages, ", "))
-		}
-
-		slack.GetReactions(input.ChannelId, input.ThreadTimestamp)
-		return newMessageSentEvent(input.Message, input.ChannelId)
-	}
-}
 
 var (
 	getReactionListEventDef       = flyte.EventDef{Name: "GetReactionListSuccess"}
@@ -98,8 +43,6 @@ func GetReactionList(slack client.Slack) flyte.Command {
 func getReactionListHandler(slack client.Slack) func(json.RawMessage) flyte.Event {
 
 	return func(rawInput json.RawMessage) flyte.Event {
-		logger.Debugf("Func called getReactionList")
-
 		input := GetReactionListInput{}
 		if err := json.Unmarshal(rawInput, &input); err != nil {
 			return flyte.NewFatalEvent(fmt.Sprintf("input is not valid: %v", err))
@@ -136,7 +79,7 @@ func newreactionListFailedEvent(message, channelId string, err string) flyte.Eve
 
 	output := GetReactionListOutput{GetReactionListInput: GetReactionListInput{Message: message, ChannelId: channelId}}
 	return flyte.Event{
-		EventDef: getReactionFailedEventDef,
+		EventDef: getReactionListFailedEventDef,
 		Payload:  GetReactionListErrorOutput{GetReactionListOutput: output, Error: err},
 	}
 }

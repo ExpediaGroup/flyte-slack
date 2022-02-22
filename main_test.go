@@ -32,8 +32,8 @@ func TestPackDefinitionIsPopulated(t *testing.T) {
 	assert.Equal(t, "Slack", packDef.Name)
 	assert.Equal(t, "https://github.com/ExpediaGroup/flyte-slack/blob/master/README.md", packDef.HelpURL.String())
 	require.Equal(t, 0, len(packDef.Labels))
-	require.Equal(t, 5, len(packDef.Commands))
-	require.Equal(t, 3, len(packDef.EventDefs))
+	require.Equal(t, 4, len(packDef.Commands))
+	require.Equal(t, 2, len(packDef.EventDefs))
 }
 
 // --- dummy Slack implementation ---
@@ -42,12 +42,18 @@ type DummySlack struct{}
 
 func (s DummySlack) GetReactions(channelId, timestamp string) {
 	//TODO implement me
+	channelId = channelId
+	timestamp = timestamp
 	return
 
 }
 
 func (s DummySlack) ListReactions(count int, user string, channelId, threadTimestamp string) (text string) {
 	//TODO implement me
+	count = count
+	user = user
+	channelId = channelId
+	threadTimestamp = threadTimestamp
 	return ""
 }
 
