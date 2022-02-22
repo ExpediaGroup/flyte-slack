@@ -76,6 +76,22 @@ The returned event payload is the same as the input.
 }
 ```
 
+
+### GetReactionList
+This command would retrieve the message text on which reaction has been added
+
+```
+{                   "count":  50 , //default value is 100 mandatory
+					"message": "" , 
+					"threadTimestamp":"...", 
+					"reactionUser":"...",  // mandatory list of reactions for a user
+ 					"channelId": "...",
+					"threadTimestamp":"..."
+					}
+```
+
+
+
 ## Events 
 
 ### ReceivedMessage
@@ -94,6 +110,25 @@ The returned event payload is the same as the input.
         },
         "message": "..."
     }
+
+### ReactionAdded
+    {
+
+        "type":"reaction_added", 
+        "user":"...",  //user that adds the reaction
+        "itemUser":"...",  //user that writes the message, file etc.
+        "item": {
+                "type" :"message", 
+                "channel" :"...", 
+                "file" :"", 
+                "fileComment" :"", 
+                "timestamp" :"..."
+                }, 
+        "reaction" :"...", //value of the reaction
+        "EventTimestamp" :"..." 
+    }
+
+
 
 ## Example Flows
 
