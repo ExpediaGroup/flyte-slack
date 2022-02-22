@@ -40,23 +40,6 @@ func TestPackDefinitionIsPopulated(t *testing.T) {
 
 type DummySlack struct{}
 
-func (s DummySlack) GetReactions(channelId, timestamp string) {
-	//TODO implement me
-	channelId = channelId
-	timestamp = timestamp
-	return
-
-}
-
-func (s DummySlack) ListReactions(count int, user string, channelId, threadTimestamp string) (text string) {
-	//TODO implement me
-	count = count
-	user = user
-	channelId = channelId
-	threadTimestamp = threadTimestamp
-	return ""
-}
-
 func (DummySlack) SendMessage(message, channelId, threadTimestamp string) {}
 
 func (DummySlack) SendRichMessage(client.RichMessage) (string, string, error) { return "", "", nil }
@@ -67,4 +50,13 @@ func (DummySlack) IncomingMessages() <-chan flyte.Event {
 
 func (DummySlack) GetConversations() ([]types.Conversation, error) {
 	return []types.Conversation{}, nil
+}
+
+func (s DummySlack) ListReactions(count int, user string, channelId, threadTimestamp string) (text string) {
+	//TODO implement me
+	count = count
+	user = user
+	channelId = channelId
+	threadTimestamp = threadTimestamp
+	return ""
 }
