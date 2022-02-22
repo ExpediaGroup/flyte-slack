@@ -43,12 +43,12 @@ func TestGetReactionListReturnsGetReactionListSuccess(t *testing.T) {
 	event := handler([]byte(`{"count": 50 , 
 					"message": "" ,
 					"threadTimestamp":"1645441176.871569",
-					"reactionUser":"U01NAB6ERFB", 
- 					"channelId": "C019Q472YPJ",
+					"reactionUser":"UXXXXXX", 
+ 					"channelId": "CXXXXXXX",
 					"threadTimestamp":"1645441176.871569"
 					}`))
 	output := event.Payload.(GetReactionListOutput)
 	assert.Equal(t, "GetReactionListSuccess", event.EventDef.Name)
 	assert.Equal(t, "", output.Message)
-	assert.Equal(t, "C019Q472YPJ", output.ChannelId)
+	assert.Equal(t, "CXXXXXXX", output.ChannelId)
 }
