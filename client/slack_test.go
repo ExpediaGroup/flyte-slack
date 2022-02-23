@@ -321,3 +321,8 @@ func (m *MockClient) PostMessage(channel string, opts ...slack.MsgOption) (strin
 func (m *MockClient) GetConversations(params *slack.GetConversationsParameters) (channels []slack.Channel, nextCursor string, err error) {
 	return nil, "", err
 }
+func (m *MockClient) ListReactions(params slack.ListReactionsParameters) ([]slack.ReactedItem, *slack.Paging, error) {
+	params = params
+	//TODO mock the list reactions
+	return nil, nil, nil
+}

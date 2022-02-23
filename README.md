@@ -20,10 +20,10 @@ Pack requires go version min. 1.11
 
 The plugin is configured using environment variables:
 
-ENV VAR                          | Default  |  Description                               | Example               
- ------------------------------- |  ------- |  ----------------------------------------- |  ---------------------
-FLYTE_API                        | -        | The API endpoint to use                    | http://localhost:8080
-FLYTE_SLACK_TOKEN                | -        | The Slack Bot API token to use             | token_abc
+| ENV VAR           | Default | Description                    | Example               |
+|-------------------|---------|--------------------------------|-----------------------|
+| FLYTE_API         | -       | The API endpoint to use        | http://localhost:8080 |
+| FLYTE_SLACK_TOKEN | -       | The Slack Bot API token to use | token_abc             |
 
 Example `FLYTE_API=http://localhost:8080 FLYTE_SLACK_TOKEN=token_abc ./flyte-slack`
 
@@ -71,10 +71,27 @@ The returned event payload is the same as the input.
 `SendRichMessageFailed`
 ```json
 {
-  "inputMessage": { ... },
+  "inputMessage": {
+  },
   "error": "..."
 }
 ```
+
+
+### GetReactionMessageInfo
+This command would retrieve the message text of reaction sent by a user. 
+
+```
+{                   "count":  50 , //default value is 100 mandatory
+					"message": "" , 
+					"threadTimestamp":"...", 
+					"reactionUser":"...",  // mandatory list of reactions for a user
+ 					"channelId": "...",
+					"threadTimestamp":"..."
+					}
+```
+
+
 
 ## Events 
 
@@ -94,6 +111,25 @@ The returned event payload is the same as the input.
         },
         "message": "..."
     }
+
+### ReactionAdded
+    {
+
+        "type":"reaction_added", 
+        "user":"...",  //user that adds the reaction
+        "itemUser":"...",  //user that writes the message, file etc.
+        "item": {
+                "type" :"message", 
+                "channel" :"...", 
+                "file" :"", 
+                "fileComment" :"", 
+                "timestamp" :"..."
+                }, 
+        "reaction" :"...", //value of the reaction
+        "EventTimestamp" :"..." 
+    }
+
+
 
 ## Example Flows
 

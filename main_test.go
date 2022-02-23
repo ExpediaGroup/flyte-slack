@@ -32,15 +32,17 @@ func TestPackDefinitionIsPopulated(t *testing.T) {
 	assert.Equal(t, "Slack", packDef.Name)
 	assert.Equal(t, "https://github.com/ExpediaGroup/flyte-slack/blob/master/README.md", packDef.HelpURL.String())
 	require.Equal(t, 0, len(packDef.Labels))
-	require.Equal(t, 3, len(packDef.Commands))
-	require.Equal(t, 1, len(packDef.EventDefs))
+	require.Equal(t, 4, len(packDef.Commands))
+	require.Equal(t, 2, len(packDef.EventDefs))
 }
 
 // --- dummy Slack implementation ---
 
 type DummySlack struct{}
 
-func (DummySlack) SendMessage(message, channelId, threadTimestamp string) {}
+func (DummySlack) SendMessage(message, channelId, threadTimestamp string) {
+
+}
 
 func (DummySlack) SendRichMessage(client.RichMessage) (string, string, error) { return "", "", nil }
 
@@ -50,4 +52,12 @@ func (DummySlack) IncomingMessages() <-chan flyte.Event {
 
 func (DummySlack) GetConversations() ([]types.Conversation, error) {
 	return []types.Conversation{}, nil
+}
+
+func (s DummySlack) GetReactionMessageText(count int, user string, channelId, threadTimestamp string) (text string) {
+	count = count
+	user = user
+	channelId = channelId
+	threadTimestamp = threadTimestamp
+	return ""
 }

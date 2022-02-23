@@ -31,6 +31,7 @@ type client interface {
 	SendMessage(message *slack.OutgoingMessage)
 	PostMessage(channel string, opts ...slack.MsgOption) (string, string, error)
 	GetConversations(params *slack.GetConversationsParameters) (channels []slack.Channel, nextCursor string, err error)
+	ListReactions(params slack.ListReactionsParameters) ([]slack.ReactedItem, *slack.Paging, error)
 }
 
 // our slack implementation makes consistent use of channel id
@@ -41,6 +42,7 @@ type Slack interface {
 	// GetConversations is a heavy call used to fetch data about all channels in a workspace
 	// intended to be cached, not called each time this is needed
 	GetConversations() ([]types.Conversation, error)
+	GetReactionMessageText(count int, user string, channelId, threadTimestamp string) (text string)
 }
 
 type slackClient struct {
@@ -69,7 +71,7 @@ func NewSlack(token string) Slack {
 
 const (
 	getConversationsLimit = 1000 // max 1000
-	excludeArchived = true
+	excludeArchived       = true
 )
 
 func (sl *slackClient) GetConversations() ([]types.Conversation, error) {
@@ -147,6 +149,20 @@ func (sl *slackClient) handleMessageEvents() {
 				continue
 			}
 			sl.incomingMessages <- toFlyteMessageEvent(v, u)
+
+		case *slack.ReactionAddedEvent:
+			logger.Debugf("received reaction event for type = %v", v)
+			u, err := sl.client.GetUserInfo(v.User)
+
+			if err != nil {
+				logger.Errorf("cannot get info about user=%s: %v", v.User, err)
+				continue
+			}
+			itemuser, err := sl.client.GetUserInfo(v.ItemUser)
+			if err != nil {
+				logger.Errorf("cannot get info about item user=%v: %v", v.ItemUser, err)
+			}
+			sl.incomingMessages <- toFlyteReactionAddedEvent(v, u, itemuser)
 		}
 	}
 }
@@ -207,4 +223,71 @@ func newUser(u *slack.User) user {
 		FirstName: u.Profile.FirstName,
 		LastName:  u.Profile.LastName,
 	}
+}
+
+func newReactionEvent(e *slack.ReactionAddedEvent, u *slack.User, itemuser *slack.User) reactionAddedEvent {
+	return reactionAddedEvent{
+		ReactionUser:   newUser(u),
+		ReactionName:   e.Reaction,
+		EventTimestamp: e.EventTimestamp,
+		ItemTimestamp:  e.Item.Timestamp,
+		ItemType:       e.Item.Type,
+		ChannelId:      e.Item.Channel,
+		ItemUser:       newUser(itemuser),
+	}
+
+}
+
+type reactionAddedEvent struct {
+	ReactionUser   user   `json:"user"`
+	ReactionName   string `json:"reaction"`
+	EventTimestamp string `json:"eventTimestamp"`
+	ItemType       string `json:"type"`
+	ItemTimestamp  string `json:"itemTimestamp"`
+	ItemUser       user   `json:"itemUser"`
+	ChannelId      string `json:"channelId"`
+}
+
+func toFlyteReactionAddedEvent(event *slack.ReactionAddedEvent, user *slack.User, itemuser *slack.User) flyte.Event {
+
+	return flyte.Event{
+		EventDef: flyte.EventDef{Name: "ReactionAdded"},
+		Payload:  newReactionEvent(event, user, itemuser),
+	}
+}
+
+func (sl *slackClient) GetReactionMessageText(count int, user string, channelId, threadTimestamp string) (text string) {
+	params := slack.ListReactionsParameters{
+		Count: count,
+		User:  user,
+	}
+	logger.Debugf("Count = %v user = %s channel id= %v  threadTimestamp= %v", count, user, channelId, threadTimestamp)
+
+	reaction, paging, err := sl.client.ListReactions(params)
+	if err != nil {
+		logger.Debugf("Error = %v", err)
+	}
+
+	for i := range reaction {
+		if reaction[i].Type == "message" {
+			if reaction[i].Channel == channelId {
+				if reaction[i].Message.Timestamp == threadTimestamp {
+					logger.Debugf("reaction match found added:  Value of Type = %v , channel = %v Msg Timestamp = %v , Text = %v",
+						reaction[i].Type, reaction[i].Channel, reaction[i].Message.ThreadTimestamp,
+						reaction[i].Message.Text)
+					return reaction[i].Message.Text
+				} else {
+					logger.Debugf("reaction match not found with provided Timestamp")
+				}
+
+			} else {
+				logger.Debugf("reaction match not found with provided Channel")
+			}
+
+		}
+	}
+
+	logger.Debugf("Value of paging  = %v", paging)
+	return ""
+
 }
