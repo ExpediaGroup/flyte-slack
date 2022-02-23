@@ -23,8 +23,6 @@ import (
 	api "github.com/HotelsDotCom/flyte-client/client"
 	"github.com/HotelsDotCom/flyte-client/flyte"
 	"github.com/HotelsDotCom/go-logger"
-	"log"
-	"net/http"
 	"net/url"
 	"time"
 )
@@ -41,32 +39,15 @@ func main() {
 	}
 
 	cache := cache.New(cc)
+
 	packDef := GetPackDef(slack, cache)
 	pack := flyte.NewPack(packDef, api.NewClient(apiHost(), 10*time.Second))
 	pack.Start()
 
-	go ListenAndServe(slack, pack)
-	ListenAndServeHttp(pack)
-
-}
-
-func ListenAndServeHttp(pack flyte.Pack) {
-	http.Handle("/interaction", client.InteractionHandler{
-		VerificationToken:   slackVerificationToken(),
-		InteractionMessages: pack,
-	})
-	log.Printf("[INFO] Server listening on :%s", "8092")
-	if err := http.ListenAndServe(":"+"8092", nil); err != nil {
-		log.Printf("[ERROR] %s", err)
-		return
-	}
-
+	ListenAndServe(slack, pack)
 }
 
 func ListenAndServe(slack client.Slack, pack flyte.Pack) {
-
-	// Register handler to receive interactive message
-	// responses from slack (kicked by user action)
 
 	// handle incoming messages
 	incomingMessages := slack.IncomingMessages()
@@ -98,13 +79,9 @@ func GetPackDef(slack client.Slack, cache cache.Cache) flyte.PackDef {
 			command.SendMessage(slack),
 			command.SendRichMessage(slack),
 			command.GetChannelInfo(slack, cache),
-			command.GetReactionMsg(slack),
-			command.GetReactionList(slack),
 		},
 		EventDefs: []flyte.EventDef{
 			{Name: "ReceivedMessage"},
-			{Name: "ReactionAdded"},
-			{Name: "ReceivedButtonAction"},
 		},
 	}
 }
