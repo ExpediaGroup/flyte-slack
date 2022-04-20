@@ -126,7 +126,7 @@ This command would retrieve the message text of reaction sent by a user.
                 "timestamp" :"..."
                 }, 
         "reaction" :"...", //value of the reaction
-        "EventTimestamp" :"..." 
+        "eventTimestamp" :"..." 
     }
 
 
