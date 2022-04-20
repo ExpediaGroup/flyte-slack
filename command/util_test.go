@@ -49,3 +49,14 @@ func (m *MockSlack) IncomingMessages() <-chan flyte.Event {
 func (m *MockSlack) GetConversations() ([]types.Conversation, error) {
 	return []types.Conversation(nil), nil
 }
+
+func (m *MockSlack) GetReactionMessageText(count int, user string, channelId, threadTimestamp string) (text string) {
+	//TODO Mock this test func
+	count = 50
+	channelId = "CXXXXX"
+	threadTimestamp = "765523.455667"
+	if user == "UXXXXX" {
+		return "This is sample test reaction message for user"
+	}
+	return ""
+}
