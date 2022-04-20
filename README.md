@@ -114,7 +114,6 @@ This command would retrieve the message text of reaction sent by a user.
 
 ### ReactionAdded
     {
-
         "type":"reaction_added", 
         "user":"...",  //user that adds the reaction
         "itemUser":"...",  //user that writes the message, file etc.
