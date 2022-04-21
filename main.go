@@ -17,63 +17,38 @@ limitations under the License.
 package main
 
 import (
+	"github.com/ExpediaGroup/flyte-client/flyte"
 	"github.com/ExpediaGroup/flyte-slack/cache"
 	"github.com/ExpediaGroup/flyte-slack/client"
 	"github.com/ExpediaGroup/flyte-slack/command"
-	api "github.com/HotelsDotCom/flyte-client/client"
-	"github.com/HotelsDotCom/flyte-client/flyte"
-	"github.com/HotelsDotCom/go-logger"
+	"github.com/rs/zerolog/log"
 	"net/url"
 	"time"
 )
-
-const packDefHelpUrl = "https://github.com/ExpediaGroup/flyte-slack/blob/master/README.md"
-const defaultPackName = "Slack"
 
 func main() {
 
 	slack := client.NewSlack(slackToken())
 	cc, err := cacheConfig()
 	if err != nil {
-		logger.Fatal(err)
+		log.Fatal().Err(err).Send()
 	}
 
 	cache := cache.New(cc)
 
-	packDef := GetPackDef(slack, cache)
-	pack := flyte.NewPack(packDef, api.NewClient(apiHost(), 10*time.Second))
+	pack := flyte.NewPackWithPolling(packDef(slack, cache), 1*time.Second)
 	pack.Start()
 
-	ListenAndServe(slack, pack)
+	for e := range slack.IncomingMessages() {
+		pack.SendEvent(e)
+	}
 }
 
-func ListenAndServe(slack client.Slack, pack flyte.Pack) {
-
-	// handle incoming messages
-	incomingMessages := slack.IncomingMessages()
-	go func() {
-		for e := range incomingMessages {
-			pack.SendEvent(e)
-		}
-	}()
-
-	select {}
-}
-
-func GetPackDef(slack client.Slack, cache cache.Cache) flyte.PackDef {
-
-	helpUrl, err := url.Parse(packDefHelpUrl)
-	if err != nil {
-		logger.Fatal("invalid pack help url")
-	}
-
-	packName := packName()
-	if packName == "" {
-		packName = defaultPackName
-	}
+func packDef(slack client.Slack, cache cache.Cache) flyte.PackDef {
+	helpUrl, _ := url.Parse("https://github.com/ExpediaGroup/flyte-slack/blob/master/README.md")
 
 	return flyte.PackDef{
-		Name:    packName,
+		Name:    packName(),
 		HelpURL: helpUrl,
 		Commands: []flyte.Command{
 			command.SendMessage(slack),

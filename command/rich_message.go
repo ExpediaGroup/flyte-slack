@@ -19,9 +19,9 @@ package command
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/ExpediaGroup/flyte-client/flyte"
 	"github.com/ExpediaGroup/flyte-slack/client"
-	"github.com/HotelsDotCom/flyte-client/flyte"
-	"github.com/HotelsDotCom/go-logger"
+	"github.com/rs/zerolog/log"
 )
 
 var (
@@ -51,13 +51,13 @@ func sendRichMessageHandler(sender RichMessageSender) flyte.CommandHandler {
 		var input client.RichMessage
 		if err := json.Unmarshal(rawInput, &input); err != nil {
 			errorMessage := fmt.Sprintf("invalid input: %v", err)
-			logger.Errorf(errorMessage)
+			log.Err(err).Send()
 			return flyte.NewFatalEvent(errorMessage)
 		}
 
 		respChannel, respTimestamp, err := sender.SendRichMessage(input)
 		if err != nil {
-			logger.Errorf("error sending rich message: %v", err)
+			log.Err(err).Msg("error sending rich message")
 			return flyte.Event{
 				EventDef: sendRichMessageFailedEventDef,
 				Payload: SendRichMessageErrorOutput{

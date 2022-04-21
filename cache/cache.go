@@ -3,7 +3,7 @@ package cache
 import (
 	"errors"
 	"github.com/ExpediaGroup/flyte-slack/types"
-	"github.com/HotelsDotCom/go-logger"
+	"github.com/rs/zerolog/log"
 	"time"
 )
 
@@ -65,7 +65,7 @@ func (c *cache) GetChannelID(channelName string, client slackClient) (*types.Con
 	if c.isConversationListUpdateNeeded() {
 		err := c.updateConversationList(client)
 		if err != nil {
-			logger.Errorf("can't update conversation list cache: %s", err)
+			log.Err(err).Msg("can't update conversation list cache")
 		}
 	}
 

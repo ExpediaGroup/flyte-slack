@@ -17,9 +17,9 @@ limitations under the License.
 package command
 
 import (
+	"github.com/ExpediaGroup/flyte-client/flyte"
 	"github.com/ExpediaGroup/flyte-slack/client"
 	"github.com/ExpediaGroup/flyte-slack/types"
-	"github.com/HotelsDotCom/flyte-client/flyte"
 )
 
 type MockSlack struct {

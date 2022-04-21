@@ -19,12 +19,10 @@ package command
 import (
 	"encoding/json"
 	"errors"
+	"github.com/ExpediaGroup/flyte-client/flyte"
 	"github.com/ExpediaGroup/flyte-slack/client"
-	"github.com/HotelsDotCom/flyte-client/flyte"
-	"github.com/HotelsDotCom/go-logger/loggertest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"strings"
 	"testing"
 )
 
@@ -47,20 +45,6 @@ func TestPostMessageShouldReturnFatalErrorEventWhenCalledWithInvalidJSON(t *test
 	assert.Contains(t, event.Payload.(string), "invalid input: ")
 }
 
-func TestPostMessageShouldLogErrorWhenCalledWithInvalidJSON(t *testing.T) {
-	loggertest.Init("DEBUG")
-
-	cmd := SendRichMessage(nil)
-	cmd.Handler([]byte(`.`))
-
-	msgs := loggertest.GetLogMessages()
-	require.Equal(t, 1, len(msgs))
-	assert.Equal(t, loggertest.LogLevelError, msgs[0].Level)
-	assert.True(t, strings.HasPrefix(msgs[0].Message, "invalid input: "), "expected message to start with \"invalid input: \", actual: %q", msgs[0].Message)
-
-	loggertest.Reset()
-}
-
 func TestSendRichMessageHandlerShouldReturnErrorEventWhenRichMessageSenderReturnsError(t *testing.T) {
 	mp := mockRichMessageSender{
 		sendRichMessage: func(rm client.RichMessage) (string, string, error) {
@@ -76,28 +60,6 @@ func TestSendRichMessageHandlerShouldReturnErrorEventWhenRichMessageSenderReturn
 	eventPayload := event.Payload.(SendRichMessageErrorOutput)
 	assert.Equal(t, eventPayload.Error, "oh dear")
 	assert.Equal(t, eventPayload.InputMessage, testRichMessageStruct())
-}
-
-func TestSendRichMessageHandlerShouldLogErrorWhenRichMessageSenderReturnsError(t *testing.T) {
-	loggertest.Init("DEBUG")
-	loggertest.ClearLogMessages()
-
-	mp := mockRichMessageSender{
-		sendRichMessage: func(rm client.RichMessage) (string, string, error) {
-			return "", "", errors.New("oh dear")
-		},
-	}
-
-	cmd := SendRichMessage(mp)
-	cmd.Handler(testRichMessage())
-
-	msgs := loggertest.GetLogMessages()
-
-	require.Equal(t, 1, len(msgs))
-	assert.Equal(t, loggertest.LogLevelError, msgs[0].Level)
-	assert.Equal(t, "error sending rich message: oh dear", msgs[0].Message)
-
-	loggertest.Reset()
 }
 
 func TestPostMessageCallsMessagePoster(t *testing.T) {

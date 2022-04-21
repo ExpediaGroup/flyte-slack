@@ -18,35 +18,20 @@ package main
 
 import (
 	"github.com/ExpediaGroup/flyte-slack/cache"
-	"github.com/HotelsDotCom/go-logger"
-	"net/url"
+	"github.com/rs/zerolog/log"
 	"os"
 	"strconv"
 	"time"
 )
 
 const (
-	apiEnvKey             = "FLYTE_API"
 	tokenEnvKey           = "FLYTE_SLACK_TOKEN"
 	packNameKey           = "PACK_NAME"
 	renewConversationList = "RENEW_CONVERSATION_LIST" // how often conversation list is updated  cache (hours)
 )
 
-// extracted to variable for testing
-var lookupEnv = os.LookupEnv
-
-func apiHost() *url.URL {
-
-	hostEnv := getEnv(apiEnvKey, true)
-	host, err := url.Parse(hostEnv)
-	if err != nil {
-		logger.Fatalf("%s=%q is not valid URL: %v", apiEnvKey, hostEnv, err)
-	}
-	return host
-}
-
 func packName() string {
-	return getEnv(packNameKey, false)
+	return getEnvDefault(packNameKey, "Slack")
 }
 
 func slackToken() string {
@@ -68,18 +53,18 @@ func cacheConfig() (*cache.Config, error) {
 
 func getEnv(key string, required bool) string {
 
-	if v, _ := lookupEnv(key); v != "" {
+	if v, _ := os.LookupEnv(key); v != "" {
 		return v
 	}
 
 	if required {
-		logger.Fatalf("env=%s not set", key)
+		log.Fatal().Msgf("env=%s not set", key)
 	}
 	return ""
 }
 
 func getEnvDefault(key string, def string) string {
-	if v, _ := lookupEnv(key); v != "" {
+	if v, _ := os.LookupEnv(key); v != "" {
 		return v
 	}
 

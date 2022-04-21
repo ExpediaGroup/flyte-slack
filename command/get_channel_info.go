@@ -2,10 +2,10 @@ package command
 
 import (
 	"encoding/json"
+	"github.com/ExpediaGroup/flyte-client/flyte"
 	"github.com/ExpediaGroup/flyte-slack/cache"
 	"github.com/ExpediaGroup/flyte-slack/client"
 	"github.com/ExpediaGroup/flyte-slack/types"
-	"github.com/HotelsDotCom/flyte-client/flyte"
 )
 
 var (
