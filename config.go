@@ -18,6 +18,7 @@ package main
 
 import (
 	"github.com/ExpediaGroup/flyte-slack/cache"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"os"
 	"strconv"
@@ -27,8 +28,19 @@ import (
 const (
 	tokenEnvKey           = "FLYTE_SLACK_TOKEN"
 	packNameKey           = "PACK_NAME"
+	logLevelKey           = "LOGLEVEL"
 	renewConversationList = "RENEW_CONVERSATION_LIST" // how often conversation list is updated  cache (hours)
 )
+
+func logLevel() zerolog.Level {
+	ll := getEnvDefault(logLevelKey, "debug")
+	l, err := zerolog.ParseLevel(ll)
+	if err != nil {
+		log.Err(err).Msg("Unable to parse log level setting to Debug")
+		return zerolog.DebugLevel
+	}
+	return l
+}
 
 func packName() string {
 	return getEnvDefault(packNameKey, "Slack")

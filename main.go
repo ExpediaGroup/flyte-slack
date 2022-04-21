@@ -21,12 +21,14 @@ import (
 	"github.com/ExpediaGroup/flyte-slack/cache"
 	"github.com/ExpediaGroup/flyte-slack/client"
 	"github.com/ExpediaGroup/flyte-slack/command"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"net/url"
 	"time"
 )
 
 func main() {
+	zerolog.SetGlobalLevel(logLevel())
 
 	slack := client.NewSlack(slackToken())
 	cc, err := cacheConfig()
