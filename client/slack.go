@@ -19,9 +19,9 @@ package client
 import (
 	"errors"
 	"fmt"
+	"github.com/ExpediaGroup/flyte-client/flyte"
 	"github.com/ExpediaGroup/flyte-slack/types"
-	"github.com/HotelsDotCom/flyte-client/flyte"
-	"github.com/HotelsDotCom/go-logger"
+	"github.com/rs/zerolog/log"
 	"github.com/slack-go/slack"
 )
 
@@ -62,7 +62,7 @@ func NewSlack(token string) Slack {
 		incomingMessages: make(chan flyte.Event),
 	}
 
-	logger.Info("initialized slack")
+	log.Info().Msg("initialized slack")
 	go sl.handleMessageEvents()
 	return sl
 }
@@ -118,7 +118,7 @@ func (sl *slackClient) SendMessage(message, channelId, threadTimestamp string) {
 	msg := sl.client.NewOutgoingMessage(message, channelId)
 	msg.ThreadTimestamp = threadTimestamp
 	sl.client.SendMessage(msg)
-	logger.Infof("message=%q sent to channel=%s", msg.Text, channelId)
+	log.Info().Msgf("message=%q sent to channel=%s", msg.Text, channelId)
 
 }
 
@@ -127,7 +127,7 @@ func (sl *slackClient) SendRichMessage(rm RichMessage) (string, string, error) {
 	if err != nil {
 		return "", "", errors.New(fmt.Sprintf("cannot send rich message=%v: %v", rm, err))
 	}
-	logger.Infof("rich message=%+v sent to channel=%s", rm, rm.ChannelID)
+	log.Info().Msgf("rich message=%+v sent to channel=%s", rm, rm.ChannelID)
 	return respChannel, respTimestamp, nil
 }
 
@@ -140,10 +140,10 @@ func (sl *slackClient) handleMessageEvents() {
 	for event := range sl.incomingEvents {
 		switch v := event.Data.(type) {
 		case *slack.MessageEvent:
-			logger.Debugf("received message=%s in channel=%s", v.Text, v.Channel)
+			log.Debug().Msgf("received message=%s in channel=%s", v.Text, v.Channel)
 			u, err := sl.client.GetUserInfo(v.User)
 			if err != nil {
-				logger.Errorf("cannot get info about user=%s: %v", v.User, err)
+				log.Err(err).Msgf("cannot get info about user=%s", v.User)
 				continue
 			}
 			sl.incomingMessages <- toFlyteMessageEvent(v, u)

@@ -19,7 +19,6 @@ package client
 import (
 	"errors"
 	"fmt"
-	"github.com/HotelsDotCom/go-logger/loggertest"
 	"github.com/slack-go/slack"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -32,21 +31,13 @@ var SlackImpl Slack
 var SlackMockClient *MockClient
 
 func Before(t *testing.T) {
-
-	loggertest.Init("DEBUG")
 	SlackImpl = NewSlack("token")
 	SlackMockClient = NewMockClient(t)
 	SlackImpl.(*slackClient).client = SlackMockClient
 }
 
-func After() {
-	loggertest.Reset()
-}
-
 func TestSendMessage(t *testing.T) {
-
 	Before(t)
-	defer After()
 
 	SlackImpl.SendMessage("the message", "channel id", "now")
 
@@ -57,7 +48,6 @@ func TestSendMessage(t *testing.T) {
 
 func TestSendRichMessage(t *testing.T) {
 	Before(t)
-	defer After()
 
 	var ch string
 	SlackMockClient.PostMessageFunc = func(channel string, opts ...slack.MsgOption) (string, string, error) {
@@ -90,7 +80,6 @@ func TestSendRichMessage(t *testing.T) {
 
 func TestSendRichMessageShouldReturnErrorOnFailure(t *testing.T) {
 	Before(t)
-	defer After()
 
 	SlackMockClient.PostMessageFunc = func(channel string, opts ...slack.MsgOption) (string, string, error) {
 		return "", "", errors.New("barf")
@@ -108,7 +97,6 @@ func TestSendRichMessageShouldReturnErrorOnFailure(t *testing.T) {
 func TestIncomingMessages(t *testing.T) {
 
 	Before(t)
-	defer After()
 	c1 := &slack.Channel{}
 	c1.Name = "name-abc"
 	u := &slack.User{
@@ -191,45 +179,6 @@ func TestIncomingMessages(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestIncomingMessagesLogging(t *testing.T) {
-
-	// given
-	Before(t)
-	defer After()
-	loggertest.ClearLogMessages()
-	c1 := &slack.Channel{}
-	c1.Name = "name-abc"
-	u := &slack.User{
-		ID:   "user-id-123",
-		Name: "kfoox",
-		Profile: slack.UserProfile{
-			Title:     "boss",
-			Email:     "k@example.com",
-			FirstName: "Karl",
-			LastName:  "Foox",
-		},
-	}
-	slackReplies := []slack.Reply{
-		{
-			Timestamp: "123",
-			User:      "Karl",
-		},
-	}
-
-	SlackMockClient.AddMockGetUserInfoCall("user-id-123", u, nil)
-
-	// when
-	sendSlackMessage(SlackImpl, "hello there ...", "id-abc", "user-id-123", "", "", 2, slackReplies)
-	time.Sleep(50 * time.Millisecond)
-
-	// then
-	msgs := loggertest.GetLogMessages()
-	require.Equal(t, 1, len(msgs))
-
-	assert.Equal(t, "received message=hello there ... in channel=id-abc", msgs[0].Message)
-	assert.Equal(t, loggertest.LogLevelDebug, msgs[0].Level)
 }
 
 // --- helpers ---

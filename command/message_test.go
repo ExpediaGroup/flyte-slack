@@ -17,7 +17,6 @@ limitations under the License.
 package command
 
 import (
-	"github.com/HotelsDotCom/go-logger/loggertest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -26,13 +25,7 @@ import (
 var MessageMockSlack *MockSlack
 
 func BeforeMessage() {
-
 	MessageMockSlack = NewMockSlack()
-	loggertest.Init("DEBUG")
-}
-
-func AfterMessage() {
-	loggertest.Reset()
 }
 
 func TestSendMessageCommandIsPopulated(t *testing.T) {
@@ -46,9 +39,7 @@ func TestSendMessageCommandIsPopulated(t *testing.T) {
 }
 
 func TestSendsMessageSendsMessageToSlack(t *testing.T) {
-
 	BeforeMessage()
-	defer AfterMessage()
 
 	handler := SendMessage(MessageMockSlack).Handler
 	handler([]byte(`{"message": "hello from flyte", "channelId": "abc-channel"}`))
@@ -60,9 +51,7 @@ func TestSendsMessageSendsMessageToSlack(t *testing.T) {
 }
 
 func TestSendMessageReturnsMessageSentEvent(t *testing.T) {
-
 	BeforeMessage()
-	defer AfterMessage()
 
 	handler := SendMessage(MessageMockSlack).Handler
 	event := handler([]byte(`{"message": "yo", "channelId": "xyz"}`))
@@ -74,9 +63,7 @@ func TestSendMessageReturnsMessageSentEvent(t *testing.T) {
 }
 
 func TestSendMessageHandleInvalidJsonInput(t *testing.T) {
-
 	BeforeMessage()
-	defer AfterMessage()
 
 	handler := SendMessage(MessageMockSlack).Handler
 	event := handler([]byte(`--- invalid json input ---`))
@@ -87,9 +74,7 @@ func TestSendMessageHandleInvalidJsonInput(t *testing.T) {
 }
 
 func TestSendMessageHandleInputWithMissingMessage(t *testing.T) {
-
 	BeforeMessage()
-	defer AfterMessage()
 
 	handler := SendMessage(MessageMockSlack).Handler
 	event := handler([]byte(`{"channelId": "UXB456Y"}`))
@@ -100,9 +85,7 @@ func TestSendMessageHandleInputWithMissingMessage(t *testing.T) {
 }
 
 func TestSendMessageHandleInputWithMissingChannelId(t *testing.T) {
-
 	BeforeMessage()
-	defer AfterMessage()
 
 	handler := SendMessage(MessageMockSlack).Handler
 	event := handler([]byte(`{"message": "oh, the channel id is missing"}`))
@@ -113,9 +96,7 @@ func TestSendMessageHandleInputWithMissingChannelId(t *testing.T) {
 }
 
 func TestSendMessageHandleInputWithMissingMessageAndChannelId(t *testing.T) {
-
 	BeforeMessage()
-	defer AfterMessage()
 
 	handler := SendMessage(MessageMockSlack).Handler
 	event := handler([]byte(`{}`))
