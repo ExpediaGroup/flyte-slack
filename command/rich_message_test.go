@@ -113,6 +113,7 @@ func TestWiring(t *testing.T) {
 
 func testRichMessage() []byte {
 	return []byte(`{
+		"username": "my_bot",
 		"channel":   "channel id",
 		"thread_ts": "timestamp",
 		"attachments": [

@@ -19,6 +19,7 @@ package client
 import "github.com/slack-go/slack"
 
 type RichMessage struct {
+	Username        string             `json:"username"`
 	Parse           string             `json:"parse"`
 	ThreadTimestamp string             `json:"thread_ts"`
 	ReplyBroadcast  bool               `json:"reply_broadcast"`
@@ -52,7 +53,8 @@ func (m RichMessage) toMsgOptions() []slack.MsgOption {
 
 func (m RichMessage) toPostMessageParameters() slack.PostMessageParameters {
 	return slack.PostMessageParameters{
-		AsUser:          true,
+		Username:        m.Username,
+		AsUser:          m.asUser(),
 		Parse:           m.Parse,
 		ThreadTimestamp: m.ThreadTimestamp,
 		ReplyBroadcast:  m.ReplyBroadcast,
@@ -64,4 +66,8 @@ func (m RichMessage) toPostMessageParameters() slack.PostMessageParameters {
 		Markdown:        m.Markdown,
 		EscapeText:      m.EscapeText,
 	}
+}
+
+func (m RichMessage) asUser() bool {
+	return len(m.Username) < 1 && len(m.IconURL) < 1 && len(m.IconEmoji) < 1
 }
