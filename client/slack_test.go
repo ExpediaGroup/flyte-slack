@@ -56,6 +56,7 @@ func TestSendRichMessage(t *testing.T) {
 	}
 
 	rm := RichMessage{
+		Username:        "my_bot",
 		Parse:           "pass?",
 		ThreadTimestamp: "now",
 		ReplyBroadcast:  true,
