@@ -31,7 +31,6 @@ type client interface {
 	SendMessage(message *slack.OutgoingMessage)
 	PostMessage(channel string, opts ...slack.MsgOption) (string, string, error)
 	GetConversations(params *slack.GetConversationsParameters) (channels []slack.Channel, nextCursor string, err error)
-	ListReactions(params slack.ListReactionsParameters) ([]slack.ReactedItem, *slack.Paging, error)
 }
 
 // our slack implementation makes consistent use of channel id
