@@ -233,15 +233,13 @@ func (sl *slackClient) GetReactionMessageText(count int, user string, channelId,
 						reaction[i].Message.Text)
 					return reaction[i].Message.Text, nil
 				} else {
-					err := fmt.Errorf("match not found for input timestamp")
-					return "", err
+					log.Debug().Msgf("reaction match not found with provided Timestamp")
 				}
-
 			} else {
-				err := fmt.Errorf("Reaction match not found for input channel")
-				return "", err
+				log.Debug().Msgf("reaction match not found with provided Channel")
 			}
 		}
 	}
-	return "", nil
+	err = fmt.Errorf("message info not found for input timestamp and channel")
+	return "", err
 }
