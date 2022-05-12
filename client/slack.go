@@ -218,7 +218,7 @@ func (sl *slackClient) GetReactionMessageText(count int, user string, channelId,
 	}
 	log.Debug().Msgf("Count = %v user = %s channel id= %v  threadTimestamp= %v", count, user, channelId, threadTimestamp)
 
-	reaction, paging, err := sl.client.ListReactions(params)
+	reaction, _, err := sl.client.ListReactions(params)
 	if err != nil {
 		log.Debug().Msgf("Error = %v", err)
 		return "", err
@@ -233,16 +233,15 @@ func (sl *slackClient) GetReactionMessageText(count int, user string, channelId,
 						reaction[i].Message.Text)
 					return reaction[i].Message.Text, nil
 				} else {
-					log.Debug().Msgf("reaction match not found with provided Timestamp")
+					err := fmt.Errorf("match not found for input timestamp")
+					return "", err
 				}
 
 			} else {
-				log.Debug().Msgf("reaction match not found with provided Channel")
+				err := fmt.Errorf("Reaction match not found for input channel")
+				return "", err
 			}
 		}
 	}
-
-	log.Debug().Msgf("Value of paging  = %v", paging)
 	return "", nil
-
 }
