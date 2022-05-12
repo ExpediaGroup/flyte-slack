@@ -76,6 +76,22 @@ The returned event payload is the same as the input.
 }
 ```
 
+
+### GetReactionMessageInfo
+This command would retrieve the message text of reaction sent by a user. 
+
+```
+{                   "count":  50 , //default value is 100 mandatory
+					"message": "" , 
+					"threadTimestamp":"...", 
+					"reactionUser":"...",  // mandatory list of reactions for a user
+ 					"channelId": "...",
+					"threadTimestamp":"..."
+					}
+```
+
+
+
 ## Events 
 
 ### ReceivedMessage

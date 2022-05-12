@@ -182,6 +182,64 @@ func TestIncomingMessages(t *testing.T) {
 	}
 }
 
+
+func TestGetReactionMessageText(t *testing.T) {
+
+	// given
+	Before(t)
+
+	SlackMockClient.ListReactionsFunc = func(params slack.ListReactionsParameters) ([]slack.ReactedItem, *slack.Paging, error) {
+
+		u := slack.Item{
+			Type:    "message",
+			Channel: "C030JSNMMT6",
+			Message: &slack.Message{
+				Msg: slack.Msg{
+					ClientMsgID:     "6cff3493-f89d-4230-b89c-d2442c88983f",
+					Type:            "message",
+					Channel:         "C030JSNMMT6",
+					User:            "U01NAB6ERFB",
+					Text:            "test tickets",
+					Timestamp:       "1652252021.476309",
+					ThreadTimestamp: "1652252021.476309",
+					IsStarred:       false,
+				},
+			},
+		}
+		r := slack.ItemReaction{
+			Name:  "create-a-ticket",
+			Count: 1,
+			Users: []string{"U01NAB6ERFB"},
+		}
+
+		slackReactedItem := slack.ReactedItem{
+			u,
+			[]slack.ItemReaction{r},
+		}
+
+		return []slack.ReactedItem{slackReactedItem}, nil, nil
+	}
+	v, err := SlackImpl.GetReactionMessageText(50, "U01NAB6ERFB", "C030JSNMMT6", "1652252021.476309")
+	assert.Equal(t, "test tickets", v)
+	assert.Equal(t, nil, err)
+
+}
+
+func TestGetReactionMessageTextError(t *testing.T) {
+
+	// given
+	Before(t)
+
+	SlackMockClient.ListReactionsFunc = func(params slack.ListReactionsParameters) ([]slack.ReactedItem, *slack.Paging, error) {
+
+		err := fmt.Errorf("some unknown error occurred")
+		return []slack.ReactedItem{}, nil, err
+	}
+	v, _ := SlackImpl.GetReactionMessageText(50, "U01NAB6ERFB", "C030JSNMMT6", "1652252021.476309")
+	assert.Equal(t, "", v)
+
+}
+
 // --- helpers ---
 
 // this simulates messages coming from slack
@@ -213,7 +271,12 @@ type MockClient struct {
 	// map stores all the sent messages by channelId (key is channelId)
 	OutgoingMessages map[string][]*slack.OutgoingMessage
 	// Slice of rich messages
-	PostMessageFunc func(channel string, opts ...slack.MsgOption) (string, string, error)
+	PostMessageFunc   func(channel string, opts ...slack.MsgOption) (string, string, error)
+	ListReactionsFunc func(params slack.ListReactionsParameters) ([]slack.ReactedItem, *slack.Paging, error)
+}
+
+func (m *MockClient) ListReactions(params slack.ListReactionsParameters) ([]slack.ReactedItem, *slack.Paging, error) {
+	return m.ListReactionsFunc(params)
 }
 
 func NewMockClient(t *testing.T) *MockClient {
@@ -224,6 +287,10 @@ func NewMockClient(t *testing.T) *MockClient {
 	m.PostMessageFunc = func(channel string, params ...slack.MsgOption) (string, string, error) {
 		return "", "", nil
 	}
+	m.ListReactionsFunc = func(params slack.ListReactionsParameters) ([]slack.ReactedItem, *slack.Paging, error) {
+		return m.ListReactionsFunc(params)
+	}
+
 	return m
 }
 

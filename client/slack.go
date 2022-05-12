@@ -31,6 +31,7 @@ type client interface {
 	SendMessage(message *slack.OutgoingMessage)
 	PostMessage(channel string, opts ...slack.MsgOption) (string, string, error)
 	GetConversations(params *slack.GetConversationsParameters) (channels []slack.Channel, nextCursor string, err error)
+	ListReactions(params slack.ListReactionsParameters) ([]slack.ReactedItem, *slack.Paging, error)
 }
 
 // our slack implementation makes consistent use of channel id
@@ -41,6 +42,7 @@ type Slack interface {
 	// GetConversations is a heavy call used to fetch data about all channels in a workspace
 	// intended to be cached, not called each time this is needed
 	GetConversations() ([]types.Conversation, error)
+	GetReactionMessageText(count int, user string, channelId, threadTimestamp string) (text string, err error)
 }
 
 type slackClient struct {
@@ -207,4 +209,40 @@ func newUser(u *slack.User) user {
 		FirstName: u.Profile.FirstName,
 		LastName:  u.Profile.LastName,
 	}
+}
+
+func (sl *slackClient) GetReactionMessageText(count int, user string, channelId, threadTimestamp string) (text string, err error) {
+	params := slack.ListReactionsParameters{
+		Count: count,
+		User:  user,
+	}
+	log.Debug().Msgf("Count = %v user = %s channel id= %v  threadTimestamp= %v", count, user, channelId, threadTimestamp)
+
+	reaction, paging, err := sl.client.ListReactions(params)
+	if err != nil {
+		log.Debug().Msgf("Error = %v", err)
+		return "", err
+	}
+
+	for i := range reaction {
+		if reaction[i].Type == "message" {
+			if reaction[i].Channel == channelId {
+				if reaction[i].Message.Timestamp == threadTimestamp {
+					log.Debug().Msgf("reaction match found added:  Value of Type = %v , channel = %v Msg Timestamp = %v , Text = %v",
+						reaction[i].Type, reaction[i].Channel, reaction[i].Message.ThreadTimestamp,
+						reaction[i].Message.Text)
+					return reaction[i].Message.Text, nil
+				} else {
+					log.Debug().Msgf("reaction match not found with provided Timestamp")
+				}
+
+			} else {
+				log.Debug().Msgf("reaction match not found with provided Channel")
+			}
+		}
+	}
+
+	logger.Debugf("Value of paging  = %v", paging)
+	return "", nil
+
 }

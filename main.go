@@ -56,6 +56,7 @@ func packDef(slack client.Slack, cache cache.Cache) flyte.PackDef {
 			command.SendMessage(slack),
 			command.SendRichMessage(slack),
 			command.GetChannelInfo(slack, cache),
+			command.GetReactionMessageInfo(slack),
 		},
 		EventDefs: []flyte.EventDef{
 			{Name: "ReceivedMessage"},
