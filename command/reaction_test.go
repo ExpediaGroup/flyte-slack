@@ -37,7 +37,6 @@ func TestGetReactionListCommandIsPopulated(t *testing.T) {
 func TestGetReactionListReturnsGetReactionListSuccess(t *testing.T) {
 
 	BeforeMessage()
-	defer AfterMessage()
 
 	handler := GetReactionMessageInfo(ReactionMockSlack).Handler
 	event := handler([]byte(`{"count": 50 , 
@@ -56,7 +55,6 @@ func TestGetReactionListReturnsGetReactionListSuccess(t *testing.T) {
 func TestGetReactionListReturnsGetReactionMessageInfoFailedMissingTimestamp(t *testing.T) {
 
 	BeforeMessage()
-	defer AfterMessage()
 
 	handler := GetReactionMessageInfo(ReactionMockSlack).Handler
 	event := handler([]byte(`{"count": 50 , 
@@ -74,7 +72,6 @@ func TestGetReactionListReturnsGetReactionMessageInfoFailedMissingTimestamp(t *t
 func TestGetReactionListReturnsGetReactionMessageInfoFailedMissingReactionUser(t *testing.T) {
 
 	BeforeMessage()
-	defer AfterMessage()
 
 	handler := GetReactionMessageInfo(ReactionMockSlack).Handler
 	event := handler([]byte(`{"count": 50 , 

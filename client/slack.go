@@ -71,7 +71,7 @@ func NewSlack(token string) Slack {
 
 const (
 	getConversationsLimit = 1000 // max 1000
-	excludeArchived = true
+	excludeArchived       = true
 )
 
 func (sl *slackClient) GetConversations() ([]types.Conversation, error) {
@@ -242,7 +242,7 @@ func (sl *slackClient) GetReactionMessageText(count int, user string, channelId,
 		}
 	}
 
-	logger.Debugf("Value of paging  = %v", paging)
+	log.Debug().Msgf("Value of paging  = %v", paging)
 	return "", nil
 
 }
