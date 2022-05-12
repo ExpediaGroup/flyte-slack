@@ -70,7 +70,7 @@ func NewSlack(token string) Slack {
 
 const (
 	getConversationsLimit = 1000 // max 1000
-	excludeArchived = true
+	excludeArchived       = true
 )
 
 func (sl *slackClient) GetConversations() ([]types.Conversation, error) {
@@ -150,16 +150,15 @@ func (sl *slackClient) handleMessageEvents() {
 			sl.incomingMessages <- toFlyteMessageEvent(v, u)
 
 		case *slack.ReactionAddedEvent:
-			logger.Debugf("received reaction event for type = %v", v)
 			u, err := sl.client.GetUserInfo(v.User)
-
+			log.Debug().Msgf("received reaction event for type = %v", v)
 			if err != nil {
-				logger.Errorf("cannot get info about user=%s: %v", v.User, err)
+				log.Err(err).Msgf("cannot get info about user=%s: %v", v.User, err)
 				continue
 			}
 			itemuser, err := sl.client.GetUserInfo(v.ItemUser)
 			if err != nil {
-				log.Err.Msgf("cannot get info about item user=%v: %v", v.ItemUser, err)
+				log.Err(err).Msgf("cannot get info about item user=%v: %v", v.ItemUser, err)
 				continue
 			}
 			sl.incomingMessages <- toFlyteReactionAddedEvent(v, u, itemuser)

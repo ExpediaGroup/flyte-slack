@@ -122,7 +122,6 @@ func TestIncomingMessages(t *testing.T) {
 	incomingMessages := SlackImpl.IncomingMessages()
 	sendSlackMessage(SlackImpl, "hello there ...", "id-abc", "user-id-123", "now", "thread", 2, slackReplies)
 	time.Sleep(50 * time.Millisecond)
-
 	select {
 	case msg := <-incomingMessages:
 		assert.Equal(t, "ReceivedMessage", msg.EventDef.Name)
@@ -181,7 +180,6 @@ func TestIncomingMessages(t *testing.T) {
 		})
 	}
 }
-
 
 // --- helpers ---
 
