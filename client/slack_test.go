@@ -182,6 +182,7 @@ func TestIncomingMessages(t *testing.T) {
 	}
 }
 
+
 // --- helpers ---
 
 // this simulates messages coming from slack
@@ -213,7 +214,12 @@ type MockClient struct {
 	// map stores all the sent messages by channelId (key is channelId)
 	OutgoingMessages map[string][]*slack.OutgoingMessage
 	// Slice of rich messages
-	PostMessageFunc func(channel string, opts ...slack.MsgOption) (string, string, error)
+	PostMessageFunc   func(channel string, opts ...slack.MsgOption) (string, string, error)
+	ListReactionsFunc func(params slack.ListReactionsParameters) ([]slack.ReactedItem, *slack.Paging, error)
+}
+
+func (m *MockClient) ListReactions(params slack.ListReactionsParameters) ([]slack.ReactedItem, *slack.Paging, error) {
+	return m.ListReactionsFunc(params)
 }
 
 func NewMockClient(t *testing.T) *MockClient {
@@ -224,6 +230,10 @@ func NewMockClient(t *testing.T) *MockClient {
 	m.PostMessageFunc = func(channel string, params ...slack.MsgOption) (string, string, error) {
 		return "", "", nil
 	}
+	m.ListReactionsFunc = func(params slack.ListReactionsParameters) ([]slack.ReactedItem, *slack.Paging, error) {
+		return m.ListReactionsFunc(params)
+	}
+
 	return m
 }
 
@@ -269,5 +279,5 @@ func (m *MockClient) PostMessage(channel string, opts ...slack.MsgOption) (strin
 }
 
 func (m *MockClient) GetConversations(params *slack.GetConversationsParameters) (channels []slack.Channel, nextCursor string, err error) {
-	return nil, "", err
+	return m.GetConversations(params)
 }

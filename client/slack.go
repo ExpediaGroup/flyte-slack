@@ -31,6 +31,7 @@ type client interface {
 	SendMessage(message *slack.OutgoingMessage)
 	PostMessage(channel string, opts ...slack.MsgOption) (string, string, error)
 	GetConversations(params *slack.GetConversationsParameters) (channels []slack.Channel, nextCursor string, err error)
+	ListReactions(params slack.ListReactionsParameters) ([]slack.ReactedItem, *slack.Paging, error)
 }
 
 // our slack implementation makes consistent use of channel id
@@ -147,6 +148,21 @@ func (sl *slackClient) handleMessageEvents() {
 				continue
 			}
 			sl.incomingMessages <- toFlyteMessageEvent(v, u)
+
+		case *slack.ReactionAddedEvent:
+			logger.Debugf("received reaction event for type = %v", v)
+			u, err := sl.client.GetUserInfo(v.User)
+
+			if err != nil {
+				logger.Errorf("cannot get info about user=%s: %v", v.User, err)
+				continue
+			}
+			itemuser, err := sl.client.GetUserInfo(v.ItemUser)
+			if err != nil {
+				log.Err.Msgf("cannot get info about item user=%v: %v", v.ItemUser, err)
+				continue
+			}
+			sl.incomingMessages <- toFlyteReactionAddedEvent(v, u, itemuser)
 		}
 	}
 }
@@ -206,5 +222,36 @@ func newUser(u *slack.User) user {
 		Title:     u.Profile.Title,
 		FirstName: u.Profile.FirstName,
 		LastName:  u.Profile.LastName,
+	}
+}
+
+func newReactionEvent(e *slack.ReactionAddedEvent, u *slack.User, itemuser *slack.User) reactionAddedEvent {
+	return reactionAddedEvent{
+		ReactionUser:   newUser(u),
+		ReactionName:   e.Reaction,
+		EventTimestamp: e.EventTimestamp,
+		ItemTimestamp:  e.Item.Timestamp,
+		ItemType:       e.Item.Type,
+		ChannelId:      e.Item.Channel,
+		ItemUser:       newUser(itemuser),
+	}
+
+}
+
+type reactionAddedEvent struct {
+	ReactionUser   user   `json:"user"`
+	ReactionName   string `json:"reaction"`
+	EventTimestamp string `json:"eventTimestamp"`
+	ItemType       string `json:"type"`
+	ItemTimestamp  string `json:"itemTimestamp"`
+	ItemUser       user   `json:"itemUser"`
+	ChannelId      string `json:"channelId"`
+}
+
+func toFlyteReactionAddedEvent(event *slack.ReactionAddedEvent, user *slack.User, itemuser *slack.User) flyte.Event {
+
+	return flyte.Event{
+		EventDef: flyte.EventDef{Name: "ReactionAdded"},
+		Payload:  newReactionEvent(event, user, itemuser),
 	}
 }
