@@ -153,7 +153,6 @@ func (sl *slackClient) handleMessageEvents() {
 			log.Debug().Msgf("received reaction event for type = %v", v)
 			if err != nil {
 				log.Err(err).Msgf("cannot get info about user=%s: %v", v.User, err)
-				continue
 			}
 			itemuser, err := sl.client.GetUserInfo(v.ItemUser)
 			if err != nil {
