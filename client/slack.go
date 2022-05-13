@@ -221,17 +221,19 @@ func newUser(u *slack.User) user {
 	}
 }
 
-func newReactionEvent(e *slack.ReactionAddedEvent, u *slack.User, itemuser *slack.User) reactionAddedEvent {
-	return reactionAddedEvent{
-		ReactionUser:   newUser(u),
-		ReactionName:   e.Reaction,
+func newReactionEvent(e *slack.ReactionAddedEvent, u, itemUser *slack.User) reactionEvent {
+	return reactionEvent{
+		Type:     e.Type,
+		User:     newUser(u),
+		ItemUser: newUser(itemUser),
+		Item: reactionItem{
+			Type:      e.Item.Type,
+			Channel:   e.Item.Channel,
+			Timestamp: e.Item.Timestamp,
+		},
+		Reaction:       e.Reaction,
 		EventTimestamp: e.EventTimestamp,
-		ItemTimestamp:  e.Item.Timestamp,
-		ItemType:       e.Item.Type,
-		ChannelId:      e.Item.Channel,
-		ItemUser:       newUser(itemuser),
 	}
-
 }
 
 type reactionItem struct {
