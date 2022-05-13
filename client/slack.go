@@ -154,7 +154,7 @@ func (sl *slackClient) handleMessageEvents() {
 			if err != nil {
 				log.Err(err).Msgf("cannot get info about user=%s: %v", v.User, err)
 			}
-			itemuser, err := sl.client.GetUserInfo(v.ItemUser)
+			itemUser, err := sl.client.GetUserInfo(v.ItemUser)
 			if err != nil {
 				log.Err(err).Msgf("cannot get info about item user=%v: %v", v.ItemUser, err)
 				continue
