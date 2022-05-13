@@ -236,14 +236,19 @@ func newReactionEvent(e *slack.ReactionAddedEvent, u *slack.User, itemuser *slac
 
 }
 
-type reactionAddedEvent struct {
-	ReactionUser   user   `json:"user"`
-	ReactionName   string `json:"reaction"`
-	EventTimestamp string `json:"eventTimestamp"`
-	ItemType       string `json:"type"`
-	ItemTimestamp  string `json:"itemTimestamp"`
-	ItemUser       user   `json:"itemUser"`
-	ChannelId      string `json:"channelId"`
+type reactionItem struct {
+	Type      string `json:"type"`
+	Timestamp string `json:"timestamp"`
+	Channel   string `json:"channel"`
+}
+
+type reactionEvent struct {
+	Type           string       `json:"type"`
+	User           user         `json:"user"`
+	ItemUser       user         `json:"itemUser"`
+	Item           reactionItem `json:"item"`
+	Reaction       string       `json:"reaction"`
+	EventTimestamp string       `json:"eventTimestamp"`
 }
 
 func toFlyteReactionAddedEvent(event *slack.ReactionAddedEvent, user *slack.User, itemuser *slack.User) flyte.Event {
