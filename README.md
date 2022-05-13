@@ -97,19 +97,16 @@ The returned event payload is the same as the input.
 
 ### ReactionAdded
     {
-
-        "type":"reaction_added", 
+        "type":"...",
         "user":"...",  //user that adds the reaction
         "itemUser":"...",  //user that writes the message, file etc.
         "item": {
                 "type" :"message", 
                 "channel" :"...", 
-                "file" :"", 
-                "fileComment" :"", 
                 "timestamp" :"..."
                 }, 
         "reaction" :"...", //value of the reaction
-        "EventTimestamp" :"..." 
+        "eventTimestamp" :"..." 
     }
 
 
