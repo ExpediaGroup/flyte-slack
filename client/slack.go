@@ -149,16 +149,16 @@ func (sl *slackClient) handleMessageEvents() {
 			sl.incomingMessages <- toFlyteMessageEvent(v, u)
 
 		case *slack.ReactionAddedEvent:
+			log.Debug().Msgf("received reaction event payload = %v", v)
 			u, err := sl.client.GetUserInfo(v.User)
-			log.Debug().Msgf("received reaction event for type = %v", v)
 			if err != nil {
 				log.Err(err).Msgf("cannot get info about user=%s: %v", v.User, err)
 			}
-			itemUser, err := sl.client.GetUserInfo(v.ItemUser)
+			i, err := sl.client.GetUserInfo(v.ItemUser)
 			if err != nil {
 				log.Err(err).Msgf("cannot get info about item user=%v: %v", v.ItemUser, err)
 			}
-			sl.incomingMessages <- toFlyteReactionAddedEvent(v, u, itemuser)
+			sl.incomingMessages <- toFlyteReactionAddedEvent(v, u, i)
 		}
 	}
 }
@@ -226,7 +226,7 @@ func newReactionEvent(e *slack.ReactionAddedEvent, u, itemUser *slack.User) reac
 		Type:     e.Type,
 		User:     newUser(u),
 		ItemUser: newUser(itemUser),
-		Item: reactionItem{
+		Item: ReactionItem{
 			Type:      e.Item.Type,
 			Channel:   e.Item.Channel,
 			Timestamp: e.Item.Timestamp,
@@ -236,7 +236,7 @@ func newReactionEvent(e *slack.ReactionAddedEvent, u, itemUser *slack.User) reac
 	}
 }
 
-type reactionItem struct {
+type ReactionItem struct {
 	Type      string `json:"type"`
 	Timestamp string `json:"timestamp"`
 	Channel   string `json:"channel"`
@@ -246,7 +246,7 @@ type reactionEvent struct {
 	Type           string       `json:"type"`
 	User           user         `json:"user"`
 	ItemUser       user         `json:"itemUser"`
-	Item           reactionItem `json:"item"`
+	Item           ReactionItem `json:"item"`
 	Reaction       string       `json:"reaction"`
 	EventTimestamp string       `json:"eventTimestamp"`
 }

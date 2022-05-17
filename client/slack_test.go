@@ -118,7 +118,6 @@ func TestIncomingMessages(t *testing.T) {
 	}
 
 	SlackMockClient.AddMockGetUserInfoCall("user-id-123", u, nil)
-
 	incomingMessages := SlackImpl.IncomingMessages()
 	sendSlackMessage(SlackImpl, "hello there ...", "id-abc", "user-id-123", "now", "thread", 2, slackReplies)
 	time.Sleep(50 * time.Millisecond)
@@ -139,6 +138,7 @@ func TestIncomingMessages(t *testing.T) {
 		assert.Equal(t, 2, payload.ReplyCount)
 		assert.Equal(t, "123", payload.Replies[0].Timestamp)
 		assert.Equal(t, "Karl", payload.Replies[0].User)
+
 	default:
 		assert.Fail(t, "expected message event")
 	}
@@ -178,6 +178,87 @@ func TestIncomingMessages(t *testing.T) {
 				assert.Fail(t, "expected message event")
 			}
 		})
+
+	}
+}
+
+func TestIncomingMessagesReactionEvent(t *testing.T) {
+	Before(t)
+	c1 := &slack.Channel{}
+	c1.Name = "name-abc"
+	u := &slack.User{
+		ID:   "user-id-123",
+		Name: "kfoox",
+		Profile: slack.UserProfile{
+			Title:     "boss",
+			Email:     "k@example.com",
+			FirstName: "Karl",
+			LastName:  "Foox",
+		},
+	}
+	i := &slack.User{
+		ID:   "user-id-123",
+		Name: "kfoox",
+		Profile: slack.UserProfile{
+			Title:     "boss",
+			Email:     "k@example.com",
+			FirstName: "Karl",
+			LastName:  "Foox",
+		},
+	}
+	SlackMockClient.AddMockGetUserInfoCall("user-id-123", u, nil)
+	SlackMockClient.AddMockGetUserInfoCall("user-id-123", i, nil)
+	incomingMessages := SlackImpl.IncomingMessages()
+	sendReactionEvent(SlackImpl, "id-abc", "user-id-123", "now", "create-a-ticket")
+	time.Sleep(50 * time.Millisecond)
+	select {
+	case msg := <-incomingMessages:
+		assert.Equal(t, "ReactionAdded", msg.EventDef.Name)
+		payload := msg.Payload.(reactionEvent)
+		assert.Equal(t, "user-id-123", payload.User.Id)
+		assert.Equal(t, "now", payload.EventTimestamp)
+	default:
+		assert.Fail(t, "expected reaction's event")
+	}
+	// Test whether Thread is properly populated or not
+	tests := []struct {
+		name             string
+		inputTimestamp   string
+		inputReaction    string
+		expectedReaction string
+	}{
+		{
+			name:             "both Timestamp and reaction are defined",
+			inputTimestamp:   "ts",
+			inputReaction:    "create-a-ticket",
+			expectedReaction: "create-a-ticket",
+		},
+		{
+			name:             "EventTimestamp is defined only",
+			inputTimestamp:   "ts",
+			inputReaction:    "",
+			expectedReaction: "",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			SlackMockClient.AddMockGetUserInfoCall("user-id-123", u, nil)
+			SlackMockClient.AddMockGetUserInfoCall("user-id-123", i, nil)
+			sendReactionEvent(SlackImpl, "id-abc", "user-id-123", test.inputTimestamp, test.inputReaction)
+			time.Sleep(50 * time.Millisecond)
+
+			select {
+			case msg := <-incomingMessages:
+				assert.Equal(t, "ReactionAdded", msg.EventDef.Name)
+				payload := msg.Payload.(reactionEvent)
+				assert.Equal(t, test.expectedReaction, payload.Reaction)
+			default:
+
+				assert.Fail(t, "expected reaction event")
+			}
+		})
+
 	}
 }
 
@@ -201,6 +282,22 @@ func sendSlackMessage(slackImpl Slack, text, channel, userId, timestamp, threadT
 	messageEvent := slack.RTMEvent{Type: "message", Data: data}
 
 	slackImpl.(*slackClient).incomingEvents <- messageEvent
+}
+
+// this simulates messages coming from slack
+func sendReactionEvent(slackImpl Slack, channel, userId, timestamp, reaction string) {
+
+	data := &slack.ReactionAddedEvent{
+		Type:           "reaction_added",
+		User:           userId,
+		ItemUser:       userId,
+		Reaction:       reaction,
+		EventTimestamp: timestamp,
+	}
+
+	reactionEvent := slack.RTMEvent{Type: "reaction_added", Data: data}
+
+	slackImpl.(*slackClient).incomingEvents <- reactionEvent
 }
 
 // --- mock client ---
