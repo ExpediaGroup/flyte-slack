@@ -238,7 +238,7 @@ func newReactionEvent(e *slack.ReactionAddedEvent, u, itemUser *slack.User) reac
 	}
 }
 
-type ReactionItem struct {
+type reactionItem struct {
 	Type      string `json:"type"`
 	Timestamp string `json:"timestamp"`
 	Channel   string `json:"channel"`
