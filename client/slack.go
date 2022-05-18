@@ -153,10 +153,12 @@ func (sl *slackClient) handleMessageEvents() {
 			u, err := sl.client.GetUserInfo(v.User)
 			if err != nil {
 				log.Err(err).Msgf("cannot get info about user=%s: %v", v.User, err)
+				continue
 			}
 			i, err := sl.client.GetUserInfo(v.ItemUser)
 			if err != nil {
 				log.Err(err).Msgf("cannot get info about item user=%v: %v", v.ItemUser, err)
+				continue
 			}
 			sl.incomingMessages <- toFlyteReactionAddedEvent(v, u, i)
 		}
