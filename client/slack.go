@@ -228,7 +228,7 @@ func newReactionEvent(e *slack.ReactionAddedEvent, u, itemUser *slack.User) reac
 		Type:     e.Type,
 		User:     newUser(u),
 		ItemUser: newUser(itemUser),
-		Item: ReactionItem{
+		Item: reactionItem{
 			Type:      e.Item.Type,
 			Channel:   e.Item.Channel,
 			Timestamp: e.Item.Timestamp,
