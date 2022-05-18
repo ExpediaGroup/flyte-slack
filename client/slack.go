@@ -248,7 +248,7 @@ type reactionEvent struct {
 	Type           string       `json:"type"`
 	User           user         `json:"user"`
 	ItemUser       user         `json:"itemUser"`
-	Item           ReactionItem `json:"item"`
+	Item           reactionItem `json:"item"`
 	Reaction       string       `json:"reaction"`
 	EventTimestamp string       `json:"eventTimestamp"`
 }
