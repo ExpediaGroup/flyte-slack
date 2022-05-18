@@ -223,7 +223,7 @@ func newUser(u *slack.User) user {
 	}
 }
 
-func newReactionEvent(e *slack.ReactionAddedEvent, u, itemUser *slack.User) reactionEvent {
+func newReactionEvent(e *slack.ReactionAddedEvent, user, itemUser *slack.User) reactionEvent {
 	return reactionEvent{
 		Type:     e.Type,
 		User:     newUser(u),
