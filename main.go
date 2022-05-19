@@ -59,6 +59,7 @@ func packDef(slack client.Slack, cache cache.Cache) flyte.PackDef {
 		},
 		EventDefs: []flyte.EventDef{
 			{Name: "ReceivedMessage"},
+			{Name: "ReactionAdded"},
 		},
 	}
 }

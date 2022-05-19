@@ -95,6 +95,22 @@ The returned event payload is the same as the input.
         "message": "..."
     }
 
+### ReactionAdded
+    {
+        "type":"...",
+        "user":"...",  //user that adds the reaction
+        "itemUser":"...",  //user that writes the message, file etc.
+        "item": {
+                "type" :"message", 
+                "channel" :"...", 
+                "timestamp" :"..."
+                }, 
+        "reaction" :"...", //value of the reaction
+        "eventTimestamp" :"..." 
+    }
+
+
+
 ## Example Flows
 
 The following flow will allow you to type any message into a Slack channel where this pack is

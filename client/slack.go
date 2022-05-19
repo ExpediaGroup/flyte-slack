@@ -69,7 +69,7 @@ func NewSlack(token string) Slack {
 
 const (
 	getConversationsLimit = 1000 // max 1000
-	excludeArchived = true
+	excludeArchived       = true
 )
 
 func (sl *slackClient) GetConversations() ([]types.Conversation, error) {
@@ -147,6 +147,20 @@ func (sl *slackClient) handleMessageEvents() {
 				continue
 			}
 			sl.incomingMessages <- toFlyteMessageEvent(v, u)
+
+		case *slack.ReactionAddedEvent:
+			log.Debug().Msgf("received reaction event payload = %v", v)
+			u, err := sl.client.GetUserInfo(v.User)
+			if err != nil {
+				log.Err(err).Msgf("cannot get info about user=%s: %v", v.User, err)
+				continue
+			}
+			i, err := sl.client.GetUserInfo(v.ItemUser)
+			if err != nil {
+				log.Err(err).Msgf("cannot get info about item user=%v: %v", v.ItemUser, err)
+				continue
+			}
+			sl.incomingMessages <- toFlyteReactionAddedEvent(v, u, i)
 		}
 	}
 }
@@ -206,5 +220,43 @@ func newUser(u *slack.User) user {
 		Title:     u.Profile.Title,
 		FirstName: u.Profile.FirstName,
 		LastName:  u.Profile.LastName,
+	}
+}
+
+func newReactionEvent(e *slack.ReactionAddedEvent, user, itemUser *slack.User) reactionEvent {
+	return reactionEvent{
+		Type:     e.Type,
+		User:     newUser(user),
+		ItemUser: newUser(itemUser),
+		Item: reactionItem{
+			Type:      e.Item.Type,
+			Channel:   e.Item.Channel,
+			Timestamp: e.Item.Timestamp,
+		},
+		Reaction:       e.Reaction,
+		EventTimestamp: e.EventTimestamp,
+	}
+}
+
+type reactionItem struct {
+	Type      string `json:"type"`
+	Timestamp string `json:"timestamp"`
+	Channel   string `json:"channel"`
+}
+
+type reactionEvent struct {
+	Type           string       `json:"type"`
+	User           user         `json:"user"`
+	ItemUser       user         `json:"itemUser"`
+	Item           reactionItem `json:"item"`
+	Reaction       string       `json:"reaction"`
+	EventTimestamp string       `json:"eventTimestamp"`
+}
+
+func toFlyteReactionAddedEvent(event *slack.ReactionAddedEvent, user *slack.User, itemuser *slack.User) flyte.Event {
+
+	return flyte.Event{
+		EventDef: flyte.EventDef{Name: "ReactionAdded"},
+		Payload:  newReactionEvent(event, user, itemuser),
 	}
 }

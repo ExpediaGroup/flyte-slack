@@ -17,8 +17,10 @@ limitations under the License.
 package client
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/ExpediaGroup/flyte-client/flyte"
 	"github.com/slack-go/slack"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -118,11 +120,9 @@ func TestIncomingMessages(t *testing.T) {
 	}
 
 	SlackMockClient.AddMockGetUserInfoCall("user-id-123", u, nil)
-
 	incomingMessages := SlackImpl.IncomingMessages()
 	sendSlackMessage(SlackImpl, "hello there ...", "id-abc", "user-id-123", "now", "thread", 2, slackReplies)
 	time.Sleep(50 * time.Millisecond)
-
 	select {
 	case msg := <-incomingMessages:
 		assert.Equal(t, "ReceivedMessage", msg.EventDef.Name)
@@ -140,6 +140,7 @@ func TestIncomingMessages(t *testing.T) {
 		assert.Equal(t, 2, payload.ReplyCount)
 		assert.Equal(t, "123", payload.Replies[0].Timestamp)
 		assert.Equal(t, "Karl", payload.Replies[0].User)
+
 	default:
 		assert.Fail(t, "expected message event")
 	}
@@ -179,6 +180,63 @@ func TestIncomingMessages(t *testing.T) {
 				assert.Fail(t, "expected message event")
 			}
 		})
+
+	}
+}
+
+func TestReactionEvents(t *testing.T) {
+	// Given
+	Before(t)
+	u := &slack.User{
+		ID:   "u-foo",
+		Name: "kfoox",
+		Profile: slack.UserProfile{
+			Title:     "boss",
+			Email:     "k@example.com",
+			FirstName: "Karl",
+			LastName:  "Foox",
+		},
+	}
+	SlackMockClient.AddMockGetUserInfoCall("u-foo", u, nil)
+	SlackMockClient.AddMockGetUserInfoCall("u-foo", u, nil)
+
+	// When
+	reaction, err := newReactionAddedEvent("u-foo", "my-item-type",
+		"id-abc", "123.1", "create-a-ticket", "123.2")
+	require.NoError(t, err)
+	SlackImpl.(*slackClient).incomingEvents <- slack.RTMEvent{Type: "reaction_added", Data: &reaction}
+
+	// Then
+	incomingMessages := SlackImpl.IncomingMessages()
+	select {
+		case msg := <-incomingMessages:
+			u := user{
+				Id:        "u-foo",
+				Name:      "kfoox",
+				Email:     "k@example.com",
+				Title:     "boss",
+				FirstName: "Karl",
+				LastName:  "Foox",
+			}
+			want := flyte.Event{
+				EventDef: flyte.EventDef{Name: "ReactionAdded"},
+				Payload: reactionEvent{
+					Type:     "reaction_added",
+					User:     u,
+					ItemUser: u,
+					Item: reactionItem{
+						Type:      "my-item-type",
+						Channel:   "id-abc",
+						Timestamp: "123.1",
+					},
+					Reaction:       "create-a-ticket",
+					EventTimestamp: "123.2",
+				},
+			}
+			assert.Equal(t, want, msg)
+
+		case <-time.After(250 * time.Millisecond):
+			assert.Fail(t, "Timed out while waiting for an expected reaction's event!")
 	}
 }
 
@@ -204,6 +262,24 @@ func sendSlackMessage(slackImpl Slack, text, channel, userId, timestamp, threadT
 	slackImpl.(*slackClient).incomingEvents <- messageEvent
 }
 
+func newReactionAddedEvent(userId, itemType, channel, itemTs, reaction, ts string) (slack.ReactionAddedEvent, error) {
+	data := fmt.Sprintf(`{
+		"type": "reaction_added",
+		"user": "%s",
+		"item_user": "%s",
+		"item": {
+			"type": "%s",
+			"channel": "%s",
+			"ts": "%s"
+		},
+		"reaction": "%s",
+		"event_ts": "%s"}`,
+		userId, userId, itemType, channel, itemTs, reaction, ts)
+	var r slack.ReactionAddedEvent
+	err := json.Unmarshal([]byte(data), &r)
+	return r, err
+}
+
 // --- mock client ---
 
 type MockClient struct {
@@ -224,6 +300,7 @@ func NewMockClient(t *testing.T) *MockClient {
 	m.PostMessageFunc = func(channel string, params ...slack.MsgOption) (string, string, error) {
 		return "", "", nil
 	}
+
 	return m
 }
 
