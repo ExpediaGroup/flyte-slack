@@ -284,20 +284,22 @@ func sendSlackMessage(slackImpl Slack, text, channel, userId, timestamp, threadT
 	slackImpl.(*slackClient).incomingEvents <- messageEvent
 }
 
-// this simulates messages coming from slack
-func sendReactionEvent(slackImpl Slack, channel, userId, timestamp, reaction string) {
-
-	data := &slack.ReactionAddedEvent{
-		Type:           "reaction_added",
-		User:           userId,
-		ItemUser:       userId,
-		Reaction:       reaction,
-		EventTimestamp: timestamp,
-	}
-
-	reactionEvent := slack.RTMEvent{Type: "reaction_added", Data: data}
-
-	slackImpl.(*slackClient).incomingEvents <- reactionEvent
+func newReactionAddedEvent(userId, itemType, channel, itemTs, reaction, ts string) (slack.ReactionAddedEvent, error) {
+	data := fmt.Sprintf(`{
+		"type": "reaction_added",
+		"user": "%s",
+		"item_user": "%s",
+		"item": {
+			"type": "%s",
+			"channel": "%s",
+			"ts": "%s"
+		},
+		"reaction": "%s",
+		"event_ts": "%s"}`,
+		userId, userId, itemType, channel, itemTs, reaction, ts)
+	var r slack.ReactionAddedEvent
+	err := json.Unmarshal([]byte(data), &r)
+	return r, err
 }
 
 // --- mock client ---
