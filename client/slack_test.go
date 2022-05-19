@@ -204,7 +204,7 @@ func TestReactionEvents(t *testing.T) {
 	reaction, err := newReactionAddedEvent("u-foo", "my-item-type",
 		"id-abc", "123.1", "create-a-ticket", "123.2")
 	require.NoError(t, err)
-	SlackImpl.(*slackClient).incomingEvents <- slack.RTMEvent{Type: "message", Data: &reaction}
+	SlackImpl.(*slackClient).incomingEvents <- slack.RTMEvent{Type: "reaction_added", Data: &reaction}
 
 	// Then
 	incomingMessages := SlackImpl.IncomingMessages()
